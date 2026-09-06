@@ -66,12 +66,15 @@ class LinterConfigurationTest {
     }
 
     @Test
-    void snakeCaseIsNotSupportedAndSaysSo() {
-        Map<String, Object> values = Map.of(FORMAT_KEY, "snake case");
-
-        IllegalArgumentException thrown =
-                assertThrows(IllegalArgumentException.class, () -> from(values));
-
-        assertTrue(thrown.getMessage().contains("snake case"), thrown.getMessage());
+    void snakeCaseIsSupportedInItsUsualSpellings() {
+        assertEquals(
+                Optional.of(IdentifierFormat.SNAKE_CASE),
+                from(Map.of(FORMAT_KEY, "snake case")).identifierFormat());
+        assertEquals(
+                Optional.of(IdentifierFormat.SNAKE_CASE),
+                from(Map.of(FORMAT_KEY, "snake_case")).identifierFormat());
+        assertEquals(
+                Optional.of(IdentifierFormat.SNAKE_CASE),
+                from(Map.of(FORMAT_KEY, "SNAKE CASE")).identifierFormat());
     }
 }

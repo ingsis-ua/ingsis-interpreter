@@ -16,6 +16,7 @@ import org.printscript.ast.NumberLiteral;
 import org.printscript.ast.Operator;
 import org.printscript.ast.PrintlnStatement;
 import org.printscript.ast.Statement;
+import org.printscript.ast.StringLiteral;
 import org.printscript.ast.TypeName;
 import org.printscript.ast.VariableDeclaration;
 import org.printscript.common.Failure;
@@ -27,6 +28,7 @@ import org.printscript.runtime.OutputPrinter;
 class ExecutorTest {
 
     private static final Range ANY = rangeAt(1, 1, 1, 1);
+    private static final String NUMBER_TYPE = "number";
 
     private static final class InMemoryPrinter implements OutputPrinter {
 
@@ -49,9 +51,22 @@ class ExecutorTest {
     private static Statement declaration(String name, Expression initializer, Range range) {
         return new VariableDeclaration(
                 new Identifier(name, ANY),
-                new TypeName("number", ANY),
+                new TypeName(NUMBER_TYPE, ANY),
                 Optional.of(initializer),
                 range);
+    }
+
+    private static Statement typedDeclaration(
+            String name, String type, Expression initializer, Range range) {
+        return new VariableDeclaration(
+                new Identifier(name, ANY),
+                new TypeName(type, ANY),
+                Optional.of(initializer),
+                range);
+    }
+
+    private static StringLiteral text(String value) {
+        return new StringLiteral(value, ANY);
     }
 
     private static Result<Void> run(Executor executor, Statement statement) {
@@ -107,6 +122,39 @@ class ExecutorTest {
 
         assertEquals(second, failure.range());
         assertTrue(failure.message().contains("x"), failure.message());
+    }
+
+    @Test
+    void declaringANumberWithAStringValueFailsWithTheRangeOfTheStatement() {
+        Range range = rangeAt(1, 1, 1, 20);
+        Executor executor = new Executor(new Environment(), new InMemoryPrinter());
+
+        Failure<Void> failure =
+                runFailing(executor, typedDeclaration("pi", NUMBER_TYPE, text("hola"), range));
+
+        assertEquals(range, failure.range());
+        assertTrue(failure.message().contains(NUMBER_TYPE), failure.message());
+        assertTrue(failure.message().contains("string"), failure.message());
+    }
+
+    @Test
+    void declaringAStringWithAStringValueSucceeds() {
+        List<String> printed =
+                printedBy(
+                        typedDeclaration("s", "string", text("hola"), ANY),
+                        new PrintlnStatement(new Identifier("s", ANY), ANY));
+
+        assertEquals(List.of("hola"), printed);
+    }
+
+    @Test
+    void declaringANumberWithANumberValueSucceeds() {
+        List<String> printed =
+                printedBy(
+                        typedDeclaration("n", NUMBER_TYPE, number(42), ANY),
+                        new PrintlnStatement(new Identifier("n", ANY), ANY));
+
+        assertEquals(List.of("42"), printed);
     }
 
     @Test

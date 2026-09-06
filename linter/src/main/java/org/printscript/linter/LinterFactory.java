@@ -12,6 +12,7 @@ import org.printscript.linter.rules.LintRule;
 import org.printscript.linter.rules.PrintlnArgumentRule;
 import org.printscript.linter.rules.format.CamelCaseChecker;
 import org.printscript.linter.rules.format.IdentifierFormatChecker;
+import org.printscript.linter.rules.format.SnakeCaseChecker;
 
 public final class LinterFactory {
 
@@ -38,6 +39,7 @@ public final class LinterFactory {
     private static IdentifierFormatChecker checkerFor(IdentifierFormat format) {
         return switch (format) {
             case CAMEL_CASE -> new CamelCaseChecker();
+            case SNAKE_CASE -> new SnakeCaseChecker();
         };
     }
 }

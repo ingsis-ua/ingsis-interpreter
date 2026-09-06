@@ -37,7 +37,42 @@ public final class Executor implements ASTVisitor<Result<Void>> {
         if (evaluated instanceof Failure<Object> failure) {
             return propagate(failure);
         }
-        return declare(variableDeclaration, valueOf(evaluated));
+        Object value = valueOf(evaluated);
+        Optional<String> typeError = typeMismatch(variableDeclaration.type().name(), value);
+        if (typeError.isPresent()) {
+            return new Failure<>(typeError.get(), variableDeclaration.range());
+        }
+        return declare(variableDeclaration, value);
+    }
+
+    // el tipo declarado tiene que coincidir con el valor calculado; tipos que no
+    // conocemos no los frenamos acá (los rechaza antes el lexer/parser).
+    private static Optional<String> typeMismatch(String declaredType, Object value) {
+        String actual = runtimeType(value);
+        if (declaredType.equals(actual) || !isKnownType(declaredType)) {
+            return Optional.empty();
+        }
+        return Optional.of(
+                "Tipo incompatible: se declaró " + declaredType + " pero el valor es " + actual);
+    }
+
+    private static String runtimeType(Object value) {
+        if (value instanceof Double) {
+            return "number";
+        }
+        if (value instanceof String) {
+            return "string";
+        }
+        if (value instanceof Boolean) {
+            return "boolean";
+        }
+        return "desconocido";
+    }
+
+    private static boolean isKnownType(String declaredType) {
+        return "number".equals(declaredType)
+                || "string".equals(declaredType)
+                || "boolean".equals(declaredType);
     }
 
     @Override
