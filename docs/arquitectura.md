@@ -78,7 +78,7 @@ Cinco cosas para leer en ese grafo:
 
 | Módulo | Decisión que esconde | Cambia cuando… | Depende de | Estado |
 |---|---|---|---|---|
-| `common` | Cómo viaja un dato o un error por el pipeline y cómo se ubica algo en el fuente | Casi nunca: cambiaría la forma del pipeline | — | ✅ |
+| `common` | Resultados, ubicaciones y mecánica genérica de scopes inmutables | Cambian contratos compartidos del pipeline | — | ✅ |
 | `token` | Qué es un token y qué categorías existen | Casi nunca: cambia la noción de token, no el lenguaje | `common` | ✅ |
 | `ast` | La forma del árbol y el contrato de recorrido | El lenguaje gana construcciones | `common` | ✅ |
 | `runtime-api` | Cómo habla un programa en ejecución con el mundo exterior | Cambian los canales de E/S del programa | — | ✅ |
@@ -253,7 +253,7 @@ Es el único punto de entrada ejecutable del sistema (`org.printscript.cli.Cli.m
 
 `ExecutionCommand` y `ValidationCommand` comparten `AbstractSourceFileCommand`, y `AnalyzingCommand` sigue el mismo patrón: todos abren el archivo fuente vía `SourceFileProcessor`, que arma un `Iterator<String>` de líneas con progreso y delega en la operación concreta (`ExecutionRunner`/`ValidationRunner`/`AnalyzingRunner`). Cero lógica de lenguaje en `cli`: solo abre archivos, arma el iterador y reporta lo que el `runner` devuelve.
 
-**Interfaz interactiva.** Correr `cli` sin argumentos abre `InteractiveShell`, un REPL que mantiene su propio directorio de trabajo para navegar el filesystem (`pwd`/`ls`/`cd`) y correr las operaciones sobre archivos relativos a él. No duplica nada: usa el mismo `SourceFileProcessor` y los mismos runners que los subcomandos, así que el resultado es idéntico al de la forma no interactiva.
+**Interfaz interactiva.** Correr `cli` sin argumentos abre `InteractiveShell`, un REPL que delega la navegación del filesystem (`pwd`/`ls`/`cd`) en `DirectoryNavigator` y corre las operaciones sobre archivos relativos al directorio de la sesión. Usa el mismo `SourceFileProcessor` y los mismos runners que los subcomandos.
 
 **Progreso durante el parseo.** `ProgressReportingIterator` decora el iterador de líneas: estima el porcentaje consumido con `Files.size` (una sola llamada, sin releer el archivo) y bytes acumulados por línea, y solo escribe a `System.err` cuando el porcentaje entero cambia. El lexer y el parser nunca se enteran de que existe.
 

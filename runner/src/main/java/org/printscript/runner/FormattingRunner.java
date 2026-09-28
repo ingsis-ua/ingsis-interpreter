@@ -12,8 +12,6 @@ import org.printscript.common.Result;
 import org.printscript.common.Success;
 import org.printscript.common.Version;
 import org.printscript.config.ConfigurationReader;
-import org.printscript.config.JsonConfigurationMapper;
-import org.printscript.config.YamlConfigurationMapper;
 import org.printscript.formatter.Formatter;
 import org.printscript.formatter.config.FormatterConfiguration;
 import org.printscript.lexer.LexerFactory;
@@ -42,12 +40,10 @@ public final class FormattingRunner {
 
     public List<Failure<?>> format(
             Iterator<String> lines, InputStream configuration, String format, Writer destination) {
-        ConfigurationReader reader =
-                new ConfigurationReader(
-                        List.of(new JsonConfigurationMapper(), new YamlConfigurationMapper()));
         return format(
                 lines,
-                FormatterConfiguration.from(reader.read(configuration, format)),
+                FormatterConfiguration.from(
+                        ConfigurationReader.standard().read(configuration, format)),
                 destination);
     }
 

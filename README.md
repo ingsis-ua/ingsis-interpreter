@@ -21,7 +21,7 @@ Verificalo con:
 java -version
 ```
 
-**No hace falta instalar Java 25**, que es la versión con la que compila el proyecto.
+**No hace falta instalar Java 21**, que es la versión con la que compila el proyecto.
 Está declarada como *toolchain* en el convention plugin, y Gradle la resuelve sola la
 primera vez gracias al `foojay-resolver` de `settings.gradle.kts`. Ese es justamente el
 punto: la toolchain se declara en el proyecto, no en la máquina de cada uno.
@@ -249,12 +249,13 @@ declaración.
 
 ## Integración continua
 
-Cada push a `master` y cada pull request dispara el workflow de
+Cada push a una rama y cada pull request dispara el workflow de
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml), que corre `./gradlew build`
 con toda la cadena de calidad y publica como artifacts los reportes de test,
 Checkstyle, PMD, CPD y cobertura (por módulo y agregada), también cuando el build
 falla, que es cuando más sirven. El JDK del toolchain se instala en el runner para no
-descargarlo en cada corrida.
+descargarlo en cada corrida. Después ejecuta los 59 casos del TCK contra los jars
+del propio commit publicados en Maven Local; CI no publica paquetes remotos.
 
 ## Entrega continua
 
@@ -269,13 +270,21 @@ git push origin v0.2.0
 
 El tag es la única fuente del número de versión: se le saca la `v` y se pasa como
 `-PprintscriptVersion`, así el jar publicado, el zip de la CLI y el tag dicen siempre lo
-mismo. Antes de publicar corre `./gradlew build` completo: un tag sobre un commit roto
-falla ahí y no queda publicado a medias.
+mismo. Antes de publicar corre `./gradlew build` completo y el TCK local. Tras
+publicar los módulos, prepara una rama en el fork del TCK desde el commit oficial
+fijado, añade los adapters y dependencias, espera el workflow de ese fork y solo
+crea el GitHub Release si ese CI termina correctamente.
+
+El CD requiere `TCK_FORK_TOKEN` en este repositorio, con acceso de escritura al fork
+`Vontk/printscript-tck`, permiso para actualizar workflows y leer Actions. El fork
+requiere `TCK_PACKAGES_USER` y `TCK_PACKAGES_TOKEN` para leer los paquetes de
+`ingsis-ua/ingsis-interpreter`. La rama enviada al fork queda asociada a la versión
+y al ID de ejecución; el CD enlaza la corrida exacta por su SHA.
 
 Publica dos cosas:
 
 - **El ejecutable de la CLI** como [GitHub Release](../../releases): `printscript-<version>.zip`
-  y `.tar`. Se descarga, se descomprime y se corre sin compilar nada. Requiere **Java 25**.
+  y `.tar`. Se descarga, se descomprime y se corre sin compilar nada. Requiere **Java 21**.
 - **Los trece módulos** en GitHub Packages, cada uno con su jar, su jar de fuentes y su POM:
 
   ```kotlin
@@ -289,6 +298,11 @@ Publica dos cosas:
 
 Para probar la publicación sin tocar el remoto: `./gradlew publishToMavenLocal
 -PprintscriptVersion=0.1.0` deja todo en `~/.m2/repository/org/printscript/`.
+
+Actualmente el TCK original falla en `InterpreterLargeFileTest.testWithCollector`:
+con 7 MB de heap el colector de 32.768 mensajes no agota la memoria, por lo que
+registra 58/59. El workflow conserva esa configuración oficial y bloquea la entrega
+hasta resolver la expectativa del test con la cátedra.
 
 ## Estructura del repositorio
 

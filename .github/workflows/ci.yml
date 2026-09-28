@@ -2,11 +2,11 @@ name: CI
 
 on:
   push:
+    branches: ['**']
   pull_request:
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
   build:
@@ -21,28 +21,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Maven usa coordenadas como org.printscript:runner, pero la API de Packages
-      # asigna su propio nombre al paquete. Se consultan esos nombres en vez de
-      # duplicar una convención que GitHub no garantiza.
-      - name: Identificar los paquetes Maven vinculados
-        if: github.event_name == 'push'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh api \
-            "/orgs/${GITHUB_REPOSITORY_OWNER}/packages?package_type=maven&per_page=100" |
-            jq -r --arg repository "$GITHUB_REPOSITORY" \
-              '.[] | select(.repository.full_name == $repository) | .name'
-
       # El toolchain que compila el proyecto está declarado en el convention plugin
-      # (Java 25). Lo instalamos acá para que Gradle lo encuentre local en vez de
+      # (Java 21). Lo instalamos acá para que Gradle lo encuentre local en vez de
       # descargarlo en cada corrida. Quien desarrolla no necesita tenerlo: el
       # foojay-resolver de settings.gradle.kts lo resuelve solo.
       - name: Instalar el JDK del toolchain declarado
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '25'
+          java-version: '21'
 
       - name: Preparar Gradle
         uses: gradle/actions/setup-gradle@v6
@@ -55,15 +42,6 @@ jobs:
 
       - name: Ejecutar el TCK oficial contra este commit
         run: ./tck/run-official-tck.sh "$PACKAGE_VERSION"
-
-      # Los PR de forks no reciben un token con escritura. En push, en cambio, este
-      # paso publica los mismos jars que acaba de consumir el TCK.
-      - name: Publicar snapshot del commit en GitHub Packages
-        if: github.event_name == 'push'
-        run: ./gradlew publish -PprintscriptVersion="$PACKAGE_VERSION" --no-daemon
-        env:
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publicar los reportes de test
         if: always()

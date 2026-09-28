@@ -10,6 +10,7 @@ readonly VERSION="$1"
 readonly ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly TCK_DIR="$ROOT_DIR/build/official-tck"
 readonly TCK_COMMIT="510028a8246f6fd607a3195394310f509d9047a2"
+readonly TCK_SOURCE="${PRINTSCRIPT_TCK_SOURCE:-https://github.com/austral-ingsis/printscript-tck.git}"
 
 cd "$ROOT_DIR"
 
@@ -18,7 +19,7 @@ cd "$ROOT_DIR"
 ./gradlew publishToMavenLocal -PprintscriptVersion="$VERSION" --no-daemon
 
 rm -rf "$TCK_DIR"
-git clone --quiet https://github.com/austral-ingsis/printscript-tck.git "$TCK_DIR"
+git clone --quiet "$TCK_SOURCE" "$TCK_DIR"
 git -C "$TCK_DIR" checkout --quiet "$TCK_COMMIT"
 
 cp "$ROOT_DIR/tck/implementation/CustomImplementationFactory.java" \

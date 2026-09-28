@@ -16,6 +16,9 @@ permissions:
   contents: write # crear el GitHub Release
   packages: write # publicar en GitHub Packages
 
+env:
+  TCK_FORK_REPOSITORY: Vontk/printscript-tck
+
 jobs:
   publicar:
     name: Publicar la versión del tag
@@ -32,13 +35,26 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '25'
+          java-version: '21'
 
       - name: Preparar Gradle
         uses: gradle/actions/setup-gradle@v6
 
       - name: Derivar la versión del tag
-        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[[:alnum:].]+)?$ ]]
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: Verificar acceso al fork y sus credenciales de Packages
+        env:
+          GH_TOKEN: ${{ secrets.TCK_FORK_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$GH_TOKEN"
+          gh api "repos/$TCK_FORK_REPOSITORY/actions/secrets/TCK_PACKAGES_USER" --silent
+          gh api "repos/$TCK_FORK_REPOSITORY/actions/secrets/TCK_PACKAGES_TOKEN" --silent
 
       # No se publica nada que no pase los mismos chequeos que el CI. Un tag sobre un
       # commit roto tiene que fallar acá y no quedar publicado a medias.
@@ -59,6 +75,11 @@ jobs:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Validar los paquetes publicados en el CI del fork del TCK
+        env:
+          TCK_FORK_TOKEN: ${{ secrets.TCK_FORK_TOKEN }}
+        run: ./tck/run-fork-ci.sh "$VERSION"
+
       - name: Publicar el Release con el ejecutable
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -66,7 +87,7 @@ jobs:
           cat > notas.tpl <<'NOTAS'
           ## Requisitos
 
-          Java 25 o superior. Los módulos se compilan con el toolchain declarado en
+          Java 21 o superior. Los módulos se compilan con el toolchain declarado en
           `printscript.java-library`, así que un JRE anterior falla con
           `UnsupportedClassVersionError`.
 

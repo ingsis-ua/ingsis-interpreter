@@ -1,4 +1,4 @@
-// gradle consulta la api de foojay y descarga el JDK 25
+// gradle consulta la api de foojay y descarga el JDK 21
 // lo cachea y compila con él; por eso cualquiera puede clonar el repo
 // con el java que tenga y compilar igual.
 plugins {

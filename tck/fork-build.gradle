@@ -1,0 +1,42 @@
+plugins {
+    id 'java'
+}
+
+def implementationVersion = System.getenv('PRINTSCRIPT_TCK_VERSION')
+if (!implementationVersion) {
+    throw new GradleException('PRINTSCRIPT_TCK_VERSION no está definido')
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url = uri('https://maven.pkg.github.com/ingsis-ua/ingsis-interpreter')
+        credentials {
+            username = System.getenv('TCK_PACKAGES_USER')
+            password = System.getenv('TCK_PACKAGES_TOKEN')
+        }
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+test {
+    minHeapSize = '5m'
+    maxHeapSize = '7m'
+    environment 'BEST_FOOTBALL_CLUB', 'San Lorenzo'
+    useJUnit()
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.13.1'
+    implementation "org.printscript:runner:${implementationVersion}"
+    implementation "org.printscript:runtime-api:${implementationVersion}"
+    implementation "org.printscript:common:${implementationVersion}"
+    implementation "org.printscript:configuration:${implementationVersion}"
+    implementation "org.printscript:linter:${implementationVersion}"
+    implementation "org.printscript:formatter:${implementationVersion}"
+}

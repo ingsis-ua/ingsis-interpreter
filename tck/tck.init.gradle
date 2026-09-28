@@ -23,13 +23,4 @@ allprojects {
 
     }
 
-    afterEvaluate {
-        java.toolchain.languageVersion = JavaLanguageVersion.of(25)
-        tasks.withType(Test).configureEach {
-            // El TCK prueba streaming: el collector debe agotar memoria, pero el counter no.
-            // Con JDK 25, 5 MB conserva exactamente esa frontera; con 7 MB el collector entra.
-            minHeapSize = '5m'
-            maxHeapSize = '5m'
-        }
-    }
 }

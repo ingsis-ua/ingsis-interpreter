@@ -7,7 +7,7 @@ el porqué de esa separación, ver [`docs/arquitectura.md`, sección 5 y 9](arqu
 
 ## Cómo compilar y correr
 
-Sin generar una distribución, usando el toolchain de Gradle (no hace falta tener Java 25
+Sin generar una distribución, usando el toolchain de Gradle (no hace falta tener Java 21
 instalado):
 
 ```bash
@@ -16,7 +16,7 @@ instalado):
 ```
 
 Generando una distribución instalable (requiere un `java` de PATH compatible con el
-toolchain del proyecto, hoy Java 25; si tu `java` por defecto es más viejo, usá
+toolchain del proyecto, hoy Java 21; si tu `java` por defecto es más viejo, usá
 `./gradlew :cli:run` de arriba):
 
 ```bash

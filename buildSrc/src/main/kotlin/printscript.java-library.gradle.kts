@@ -1,5 +1,5 @@
 // qué es un módulo
-// Java 25 + JUnit 5 + repos
+// Java 21 + JUnit 5 + repos
 
 plugins {
     id("java-library")
@@ -18,7 +18,7 @@ repositories {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(25))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 

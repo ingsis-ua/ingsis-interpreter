@@ -12,12 +12,9 @@ import interpreter.PrintScriptLinter;
 
 import java.io.InputStream;
 import java.io.Writer;
-import java.util.List;
 
 import org.printscript.config.ConfigurationReader;
-import org.printscript.config.JsonConfigurationMapper;
 import org.printscript.config.RulesConfiguration;
-import org.printscript.config.YamlConfigurationMapper;
 import org.printscript.formatter.config.FormatterConfiguration;
 import org.printscript.linter.Violation;
 import org.printscript.linter.config.LinterConfiguration;
@@ -34,9 +31,7 @@ import org.printscript.runtime.RuntimePorts;
 // de lenguaje, solo traducción de vocabularios.
 public class CustomImplementationFactory implements PrintScriptFactory {
 
-    private static final ConfigurationReader CONFIGURATION =
-            new ConfigurationReader(
-                    List.of(new JsonConfigurationMapper(), new YamlConfigurationMapper()));
+    private static final ConfigurationReader CONFIGURATION = ConfigurationReader.standard();
 
     @Override
     public PrintScriptInterpreter interpreter() {

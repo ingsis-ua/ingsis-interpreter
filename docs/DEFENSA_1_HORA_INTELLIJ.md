@@ -34,8 +34,8 @@ Wrapper está fijado en `gradle/wrapper/gradle-wrapper.properties`; por eso el e
 usan Gradle 9.5.0 aunque la máquina no tenga Gradle instalado globalmente.
 
 El toolchain se declara en
-`buildSrc/src/main/kotlin/printscript.java-library.gradle.kts`: Java 25. IntelliJ puede
-tener otro JDK para arrancar, pero Gradle resuelve el compilador 25 mediante el plugin
+`buildSrc/src/main/kotlin/printscript.java-library.gradle.kts`: Java 21. IntelliJ puede
+tener otro JDK para arrancar, pero Gradle resuelve el compilador 21 mediante el plugin
 Foojay de `settings.gradle.kts`. Ante cambios de `.gradle.kts`, pulsar **Load Gradle
 Changes**.
 
@@ -66,7 +66,7 @@ su propio `build.gradle.kts` con dependencias directas.
 `buildSrc` es un build auxiliar que compila convention plugins. No es un módulo del
 producto. Sus cuatro archivos clave son:
 
-- `printscript.java-library.gradle.kts`: Java Library, Java 25, JUnit 5, repositorio Maven
+- `printscript.java-library.gradle.kts`: Java Library, Java 21, JUnit 5, repositorio Maven
   Central y publicación.
 - `printscript.quality.gradle.kts`: Checkstyle, PMD, JaCoCo y umbrales.
 - `printscript.format.gradle.kts`: Spotless/Google Java Format.
@@ -225,16 +225,15 @@ Desde Terminal de IntelliJ:
 
 El script publica los trece módulos del working tree en Maven Local, clona el TCK en
 `build/official-tck`, fija su commit oficial, copia los adapters y ejecuta exactamente 59
-tests. `tck/tck.init.gradle` declara las seis dependencias que consume el adapter, JDK 25
-y heap 5 MB. Fijar el commit evita que un cambio externo convierta un push idéntico en un
+tests. `tck/tck.init.gradle` declara las seis dependencias que consume el adapter.
+El TCK conserva Java 21 y sus límites originales de heap, 5 y 7 MB. Fijar el commit evita que un
 resultado distinto; actualizarlo debe ser una decisión revisada.
 
 El caso difícil compara dos consumidores sobre 32.768 `println`: `PrintCounter` no
 retiene salidas y debe terminar; `PrintCollector` las acumula y debe reportar `Java heap
-space`. Con JDK 25 y máximo 7 MB el collector entraba y quedaban 58/59; con 5 MB el
-collector agota memoria y el contador sigue pasando. No se detecta el nombre del test ni
-se inserta un OOM artificial en producción: se fija la frontera ambiental que la prueba
-pretende observar. Resultado comprobado: 59/59.
+space`. Con Java 21 y máximo 7 MB, el collector termina y quedan 58/59. La
+automatización informa el fallo y bloquea la entrega sin alterar el test ni la
+configuración de memoria oficial.
 
 ## 10. CI: qué ocurre en cada push
 
@@ -370,14 +369,15 @@ debe cambiar solo huecos configurados, incluso si el programa no tipa.
 **¿Qué prueba el TCK?** El contrato externo común de interpreter, formatter y linter,
 incluidas versiones y streaming; no reemplaza unit tests internos.
 
-**¿CI publica?** En push sí publica un snapshot con SHA después de build y TCK; en PR corre
-ambas suites pero no publica. Los tags disparan el workflow CD de release.
+**¿CI publica?** No. En push y PR corre el build y el TCK local. Los tags disparan
+el CD, que publica la versión, ejecuta el CI en el fork del TCK y crea el release
+solo si ese CI pasa.
 
-**¿Hay deployment?** No. Hay packaging, publicación Maven y GitHub Releases.
+**¿Hay deployment?** El CD configura publicación Maven y GitHub Releases, pero
+el caso de memoria del TCK bloquea actualmente el release.
 
-**¿Qué estaba roto?** El último commit dejó un método privado sin uso en `LexerFactory`;
-PMD frenaba `build`. Se conservó como ejemplo comentado, no como método compilado. El TCK tenía además una frontera de heap no
-reproducible en JDK 25; el arnés automatizado fija 5 MB y pasa 59/59.
+**¿Qué bloquea la entrega?** El test de memoria `InterpreterLargeFileTest.testWithCollector`:
+con el heap oficial de 7 MB la JVM no agota memoria y el TCK queda en 58/59.
 
 ## 16. Machete final de IntelliJ
 
