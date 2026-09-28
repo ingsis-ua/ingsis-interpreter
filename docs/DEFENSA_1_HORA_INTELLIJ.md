@@ -238,35 +238,33 @@ configuración de memoria oficial.
 ## 10. CI: qué ocurre en cada push
 
 Abrir `.github/workflows/ci.yml`. Se dispara en todo `push` y en `pull_request`. El job
-corre en `ubuntu-latest`, hace checkout con historia completa, instala Temurin 25 y prepara
+corre en `ubuntu-latest`, hace checkout con historia completa, instala Temurin 21 y prepara
 Gradle. Después:
 
 1. ejecuta `build jacocoRootReport` sobre los trece módulos;
 2. crea `PACKAGE_VERSION=0.2.0-ci.<run>.<sha-corto>`;
 3. ejecuta el TCK contra artefactos Maven Local de ese mismo checkout;
-4. si el evento es `push`, publica esa versión exacta en GitHub Packages;
-5. siempre intenta subir reportes de tests, Checkstyle, PMD, CPD y JaCoCo.
+4. siempre intenta subir reportes de tests, Checkstyle, PMD, CPD y JaCoCo.
 
-`permissions: packages: write` habilita el `GITHUB_TOKEN`. En PR se omite publicación:
-los PR de forks no deben recibir credenciales de escritura. “Pasa el último commit” se
-garantiza porque checkout, build, publicación local, TCK y publicación remota ocurren en
-el mismo job y workspace; si un paso falla, los pasos siguientes normales no corren.
+CI solo requiere `contents: read`. “Pasa el último commit” se garantiza porque checkout,
+build, publicación local y TCK ocurren en el mismo job y workspace; si un paso falla,
+los pasos siguientes normales no corren.
 
-No decir que CI hace deploy. Publica snapshots consumibles: eso es entrega de paquetes.
-No instala una aplicación en un servidor.
+CI no publica paquetes remotos; esa responsabilidad pertenece al CD.
 
 ## 11. CD, packaging y GitHub Packages
 
 Abrir `.github/workflows/cd.yml`. Se dispara solo al pushear un tag `v*`. Deriva la
 versión quitando `v`, corre `build`, corre el TCK, genera `:cli:distZip` y `distTar`,
-publica los trece módulos Maven y crea un GitHub Release con las distribuciones CLI.
+publica los trece módulos Maven y envía una rama al fork del TCK. Espera el CI de
+ese fork antes de crear un GitHub Release con las distribuciones CLI.
 
 Las palabras no son sinónimos:
 
 - Build: compilar y verificar (`build`).
 - Package: producir JAR/ZIP/TAR (`jar`, `distZip`, `distTar`).
 - Publish: copiar paquetes a un repository (`publishToMavenLocal` o `publish`).
-- Deploy: instalar/activar en un ambiente de ejecución. No existe deployment en este repo.
+- Deploy: en este proyecto, dejar paquetes y distribuciones disponibles para consumo.
 
 Maven coordinates: group `org.printscript`, artifactId igual al nombre de módulo,
 version pasada por `-PprintscriptVersion`. Maven Local queda bajo
@@ -284,7 +282,7 @@ export GITHUB_TOKEN=token_con_write_packages
 La versión debe ser única. El script ejecuta build/cobertura, TCK y recién entonces
 `publish`. Incluye modificaciones sin commit porque Gradle compila el filesystem actual.
 Eso es útil para una prueba deliberada, pero no brinda trazabilidad de Git por sí sola;
-los snapshots de CI sí incluyen SHA. Alternativamente las credenciales pueden estar en
+el CD por tag sí conserva esa trazabilidad. Alternativamente las credenciales pueden estar en
 `~/.gradle/gradle.properties` como `gpr.user` y `gpr.key`, aunque el script exige las
 variables para hacer explícita la operación remota.
 
@@ -388,9 +386,9 @@ con el heap oficial de 7 MB la JVM no agota memoria y el TCK queda en 58/59.
 5. **Project** → `runner/StatementStreams`: composición.
 6. **Project** → factories: variación 1.0/1.1.
 7. **Project** → `runtime-api`: puertos.
-8. **Terminal** → `./tck/run-official-tck.sh 0.2.0-SNAPSHOT`: 59/59.
-9. **Project** → `.github/workflows/ci.yml`: push/PR, build, TCK, snapshot.
-10. **Project** → `.github/workflows/cd.yml`: tag, TCK, packages, CLI release.
+8. **Terminal** → `./tck/run-official-tck.sh 0.2.0-SNAPSHOT`: 58/59 con el heap oficial.
+9. **Project** → `.github/workflows/ci.yml`: push/PR, build, TCK local.
+10. **Project** → `.github/workflows/cd.yml`: tag, TCK, packages, CI del fork, CLI release.
 11. **Terminal** → `publish-working-tree.sh <versión única>` solo con credenciales y con
     intención real de escribir en GitHub Packages.
 12. Si preguntan Docker: **NO ENCONTRADO EN EL REPOSITORY**; conectar solo conceptos
