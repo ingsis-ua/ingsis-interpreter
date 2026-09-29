@@ -40,7 +40,7 @@ jobs:
       - name: Derivar versión trazable del commit
         run: echo "PACKAGE_VERSION=0.2.0-ci.${GITHUB_RUN_NUMBER}.${GITHUB_SHA::12}" >> "$GITHUB_ENV"
 
-      - name: Ejecutar el TCK oficial contra este commit
+      - name: Ejecutar el TCK de la cátedra con la prueba de streaming corregida
         run: ./tck/run-official-tck.sh "$PACKAGE_VERSION"
 
       - name: Publicar los reportes de test

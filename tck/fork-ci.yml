@@ -30,4 +30,4 @@ jobs:
           version="${version%-run-*}"
           test -n "$TCK_PACKAGES_USER"
           test -n "$TCK_PACKAGES_TOKEN"
-          PRINTSCRIPT_TCK_VERSION="$version" ./gradlew clean test --no-daemon --console=plain
+          PRINTSCRIPT_TCK_VERSION="$version" ./gradlew clean build --no-daemon --console=plain

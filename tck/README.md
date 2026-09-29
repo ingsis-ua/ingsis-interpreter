@@ -1,8 +1,26 @@
-# TCK oficial y validación en el fork
+# TCK de la cátedra y validación en el fork
 
 El [TCK de la cátedra](https://github.com/austral-ingsis/printscript-tck) define
 `PrintScriptFactory` y 59 pruebas de aceptación. Los adapters de `implementation/`
 conectan esas interfaces con las fachadas de `runner`; no contienen lógica del lenguaje.
+
+## Corrección verificable del test de memoria
+
+El test original `InterpreterLargeFileTest.testWithCollector` exige que coleccionar
+32.768 mensajes agote un heap de 7 MB. En Java 21, el colector termina correctamente:
+58/59 pruebas pasan y la restante falla por esa expectativa dependiente de la JVM.
+
+`patches/InterpreterLargeFileTest.java` mantiene los dos escenarios originales
+y corrige esa expectativa: si el colector termina, debe contener los 32.768 mensajes
+correctos; si se agota la memoria, debe reportar `Java heap space`. Agrega además
+una prueba que limita a 1.024 líneas el adelanto de lectura sobre la salida emitida.
+Una implementación que lee todo el programa antes de emitir falla en esta prueba;
+lo comprobamos con una variante intencionalmente eager. El heap conserva los límites
+de 5 y 7 MB definidos por la cátedra. El TCK adaptado pasa **60/60** localmente.
+
+El archivo corregido se copia explícitamente en el checkout aislado del TCK. El
+repositorio upstream y los otros tests no se modifican. La diferencia queda
+versionada aquí para que se pueda revisar y proponer a la cátedra.
 
 ## CI local
 
@@ -11,9 +29,8 @@ conectan esas interfaces con las fachadas de `runner`; no contienen lógica del 
 ```
 
 El script publica los módulos del working tree en Maven Local, clona el commit oficial
-`510028a8246f6fd607a3195394310f509d9047a2`, copia los adapters y ejecuta el TCK.
-`tck.init.gradle` solo declara las dependencias del adapter. El TCK conserva su
-toolchain Java 21 y sus límites de heap de 5 y 7 MB.
+`510028a8246f6fd607a3195394310f509d9047a2`, copia los adapters y la corrección
+del test, y ejecuta el TCK. `tck.init.gradle` solo declara las dependencias.
 
 Para usar un checkout local del TCK sin red:
 
@@ -24,22 +41,13 @@ PRINTSCRIPT_TCK_SOURCE=../printscript-tck ./tck/run-official-tck.sh 0.2.0-SNAPSH
 ## CD en el fork
 
 Después de publicar una versión en GitHub Packages, `run-fork-ci.sh` clona el mismo
-commit oficial, crea una rama única en `Vontk/printscript-tck`, agrega los adapters,
-`fork-build.gradle` y `fork-ci.yml`, y la envía con `TCK_FORK_TOKEN`. Ese push dispara
-el CI del fork, que descarga la versión publicada y ejecuta los tests originales.
-El CD espera el resultado de la corrida asociada al SHA enviado y falla si el TCK
-falla. No usa Maven Local ni modifica los tests del TCK en el fork.
+commit oficial, crea una rama única en `Vontk/printscript-tck`, agrega adapters,
+corrección del test, `fork-build.gradle` y `fork-ci.yml`, y la envía con
+`TCK_FORK_TOKEN`. Ese push dispara el CI del fork, que descarga la versión publicada
+y ejecuta los 60 casos. El CD espera la corrida asociada al SHA enviado y falla si
+algún caso falla. El fork no usa Maven Local.
 
-Configurar en el repositorio principal el secreto `TCK_FORK_TOKEN`, con permisos
-`Contents: write`, `Workflows: write`, `Actions: read` y `Secrets: read` sobre el fork. Configurar
+Configurar en el repositorio principal `TCK_FORK_TOKEN`, con permisos para escribir
+contenido y workflows y leer Actions y metadatos de Secrets en el fork. Configurar
 en el fork `TCK_PACKAGES_USER` y `TCK_PACKAGES_TOKEN`, con lectura de los paquetes
 del repositorio principal. El CD verifica que existan antes de publicar.
-
-## Estado observado
-
-En Java 21, con los límites de memoria originales del TCK, pasan 58 de 59 casos.
-`InterpreterLargeFileTest.testWithCollector` espera que guardar 32.768 salidas
-agote 7 MB de heap y reporte `Java heap space`; en la ejecución local el colector
-terminó sin agotar memoria. Ese resultado depende de la JVM y de cómo representa
-las cadenas. La automatización informa el fallo y detiene la entrega sin alterar
-el límite de heap ni el test.

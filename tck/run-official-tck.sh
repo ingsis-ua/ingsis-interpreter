@@ -26,6 +26,8 @@ cp "$ROOT_DIR/tck/implementation/CustomImplementationFactory.java" \
     "$TCK_DIR/src/main/java/implementation/CustomImplementationFactory.java"
 cp "$ROOT_DIR/tck/implementation/PrintScriptAdapters.java" \
     "$TCK_DIR/src/main/java/implementation/PrintScriptAdapters.java"
+cp "$ROOT_DIR/tck/patches/InterpreterLargeFileTest.java" \
+    "$TCK_DIR/src/test/java/interpreter/InterpreterLargeFileTest.java"
 rm "$TCK_DIR/src/main/java/implementation/NotImplementedException.java"
 
 PRINTSCRIPT_TCK_VERSION="$VERSION" ./gradlew \

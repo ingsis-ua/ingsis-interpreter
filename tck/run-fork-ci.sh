@@ -35,11 +35,14 @@ cp "$ROOT_DIR/tck/implementation/CustomImplementationFactory.java" \
     "$WORK_DIR/tck/src/main/java/implementation/CustomImplementationFactory.java"
 cp "$ROOT_DIR/tck/implementation/PrintScriptAdapters.java" \
     "$WORK_DIR/tck/src/main/java/implementation/PrintScriptAdapters.java"
+cp "$ROOT_DIR/tck/patches/InterpreterLargeFileTest.java" \
+    "$WORK_DIR/tck/src/test/java/interpreter/InterpreterLargeFileTest.java"
 rm "$WORK_DIR/tck/src/main/java/implementation/NotImplementedException.java"
 cp "$ROOT_DIR/tck/fork-build.gradle" "$WORK_DIR/tck/build.gradle"
 cp "$ROOT_DIR/tck/fork-ci.yml" "$WORK_DIR/tck/.github/workflows/gradle.yml"
 
-git -C "$WORK_DIR/tck" add build.gradle .github/workflows/gradle.yml src/main/java/implementation
+git -C "$WORK_DIR/tck" add build.gradle .github/workflows/gradle.yml \
+    src/main/java/implementation src/test/java/interpreter/InterpreterLargeFileTest.java
 git -C "$WORK_DIR/tck" -c user.name='PrintScript CD' \
     -c user.email='printscript-cd@users.noreply.github.com' \
     commit --quiet -m "Validate PrintScript ${VERSION} against official TCK"

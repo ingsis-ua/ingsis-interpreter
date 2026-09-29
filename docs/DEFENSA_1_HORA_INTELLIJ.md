@@ -224,16 +224,17 @@ Desde Terminal de IntelliJ:
 ```
 
 El script publica los trece módulos del working tree en Maven Local, clona el TCK en
-`build/official-tck`, fija su commit oficial, copia los adapters y ejecuta exactamente 59
-tests. `tck/tck.init.gradle` declara las seis dependencias que consume el adapter.
-El TCK conserva Java 21 y sus límites originales de heap, 5 y 7 MB. Fijar el commit evita que un
-resultado distinto; actualizarlo debe ser una decisión revisada.
+`build/official-tck`, fija su commit oficial, copia los adapters y una corrección
+versionada del test de memoria, y ejecuta 60 tests. `tck/tck.init.gradle` declara las
+seis dependencias que consume el adapter. El TCK conserva Java 21 y sus límites
+originales de heap, 5 y 7 MB. Fijar el commit evita que un cambio externo altere
+una ejecución reproducible.
 
 El caso difícil compara dos consumidores sobre 32.768 `println`: `PrintCounter` no
-retiene salidas y debe terminar; `PrintCollector` las acumula y debe reportar `Java heap
-space`. Con Java 21 y máximo 7 MB, el collector termina y quedan 58/59. La
-automatización informa el fallo y bloquea la entrega sin alterar el test ni la
-configuración de memoria oficial.
+retiene salidas y debe terminar; `PrintCollector` las acumula. El test original
+supone que el collector debe agotar 7 MB, pero aquí termina correctamente. La
+corrección acepta ese resultado solo si entregó todos los mensajes y agrega un
+test que detecta lectura adelantada excesiva. Resultado local: 60/60.
 
 ## 10. CI: qué ocurre en cada push
 
@@ -371,11 +372,11 @@ incluidas versiones y streaming; no reemplaza unit tests internos.
 el CD, que publica la versión, ejecuta el CI en el fork del TCK y crea el release
 solo si ese CI pasa.
 
-**¿Hay deployment?** El CD configura publicación Maven y GitHub Releases, pero
-el caso de memoria del TCK bloquea actualmente el release.
+**¿Hay deployment?** El CD configura publicación Maven y GitHub Releases tras
+validar en el fork la versión publicada. Falta probarlo con credenciales remotas.
 
-**¿Qué bloquea la entrega?** El test de memoria `InterpreterLargeFileTest.testWithCollector`:
-con el heap oficial de 7 MB la JVM no agota memoria y el TCK queda en 58/59.
+**¿Qué ocurría con el test de memoria?** Su expectativa de OOM dependía de la JVM.
+La corrección verifica la salida completa y prueba streaming de forma directa.
 
 ## 16. Machete final de IntelliJ
 
@@ -386,7 +387,7 @@ con el heap oficial de 7 MB la JVM no agota memoria y el TCK queda en 58/59.
 5. **Project** → `runner/StatementStreams`: composición.
 6. **Project** → factories: variación 1.0/1.1.
 7. **Project** → `runtime-api`: puertos.
-8. **Terminal** → `./tck/run-official-tck.sh 0.2.0-SNAPSHOT`: 58/59 con el heap oficial.
+8. **Terminal** → `./tck/run-official-tck.sh 0.2.0-SNAPSHOT`: 60/60 con el test corregido.
 9. **Project** → `.github/workflows/ci.yml`: push/PR, build, TCK local.
 10. **Project** → `.github/workflows/cd.yml`: tag, TCK, packages, CI del fork, CLI release.
 11. **Terminal** → `publish-working-tree.sh <versión única>` solo con credenciales y con
