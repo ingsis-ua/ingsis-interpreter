@@ -48,6 +48,8 @@ y ejecuta los 60 casos. El CD espera la corrida asociada al SHA enviado y falla 
 algún caso falla. El fork no usa Maven Local.
 
 Configurar en el repositorio principal `TCK_FORK_TOKEN`, con permisos para escribir
-contenido y workflows y leer Actions y metadatos de Secrets en el fork. Configurar
+contenido y workflows y leer Actions en el fork. Configurar
 en el fork `TCK_PACKAGES_USER` y `TCK_PACKAGES_TOKEN`, con lectura de los paquetes
-del repositorio principal. El CD verifica que existan antes de publicar.
+del repositorio principal. Para GitHub Packages Maven, `TCK_PACKAGES_TOKEN` debe ser
+un personal access token (classic) con `read:packages` y acceso al paquete; el
+usuario corresponde a ese token. El CI del fork falla explícitamente si faltan.
