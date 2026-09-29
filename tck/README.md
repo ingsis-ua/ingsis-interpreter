@@ -40,7 +40,9 @@ PRINTSCRIPT_TCK_SOURCE=../printscript-tck ./tck/run-official-tck.sh 0.2.0-SNAPSH
 
 ## CD en el fork
 
-Después de publicar una versión en GitHub Packages, `run-fork-ci.sh` clona el mismo
+Cada push a `master` (o `main`) que pasa el CI activa el CD; esto incluye los merges
+de pull requests. El CD publica una versión única de los módulos en GitHub Packages.
+Después, `run-fork-ci.sh` clona el mismo
 commit oficial, crea una rama única en `Vontk/printscript-tck`, agrega adapters,
 corrección del test, `fork-build.gradle` y `fork-ci.yml`, y la envía con
 `TCK_FORK_TOKEN`. Ese push dispara el CI del fork, que descarga la versión publicada

@@ -21,6 +21,8 @@ import org.printscript.runner.ValidationRunner;
 // y stdin/stdout (docs/arquitectura.md, sección 5).
 final class InteractiveShell {
 
+    private static final int SOURCE_AND_CONFIG_PARTS = 2;
+
     private final BufferedReader input;
     private final PrintStream out;
     private final PrintStream err;
@@ -90,9 +92,11 @@ final class InteractiveShell {
     // separa el comando (primer token) del resto de la línea, que se toma tal cual
     // como argumento; así los paths con espacios funcionan sin comillas
     private void dispatch(String line) {
-        int space = line.indexOf(' ');
-        String command = (space < 0 ? line : line.substring(0, space)).toLowerCase(Locale.ROOT);
-        String argument = space < 0 ? "" : line.substring(space + 1).strip();
+        int separator = line.indexOf(' ');
+        boolean hasArgument = separator >= 0;
+        String commandName = hasArgument ? line.substring(0, separator) : line;
+        String command = commandName.toLowerCase(Locale.ROOT);
+        String argument = hasArgument ? line.substring(separator + 1).strip() : "";
 
         Consumer<String> handler = commands.get(command);
         if (handler == null) {
@@ -197,7 +201,7 @@ final class InteractiveShell {
             err.println("Falta el archivo. Uso: " + uso);
             return;
         }
-        String[] parts = argument.split("\\s+", 2);
+        String[] parts = argument.split("\\s+", SOURCE_AND_CONFIG_PARTS);
         Path source = navigator.resolve(parts[0]);
         Path config = parts.length > 1 ? navigator.resolve(parts[1]) : null;
         operation.run(source, config);

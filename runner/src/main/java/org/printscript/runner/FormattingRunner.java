@@ -49,12 +49,15 @@ public final class FormattingRunner {
 
     private static void write(
             Result<String> result, Writer destination, List<Failure<?>> failures) {
-        if (result instanceof Failure<String> failure) {
-            failures.add(failure);
-            return;
+        switch (result) {
+            case Failure<String> failure -> failures.add(failure);
+            case Success<String> formatted -> writeText(destination, formatted.value());
         }
+    }
+
+    private static void writeText(Writer destination, String text) {
         try {
-            destination.write(((Success<String>) result).value());
+            destination.write(text);
         } catch (IOException exception) {
             throw new UncheckedIOException(exception);
         }

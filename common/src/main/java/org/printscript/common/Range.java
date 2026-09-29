@@ -8,8 +8,10 @@ public record Range(Position start, Position end) {
     public Range {
         Objects.requireNonNull(start, "start");
         Objects.requireNonNull(end, "end");
-        if (end.line() < start.line()
-                || end.line() == start.line() && end.column() < start.column()) {
+        boolean earlierLine = end.line() < start.line();
+        boolean earlierColumnOnSameLine =
+                end.line() == start.line() && end.column() < start.column();
+        if (earlierLine || earlierColumnOnSameLine) {
             throw new IllegalArgumentException("Range end must not precede start");
         }
     }

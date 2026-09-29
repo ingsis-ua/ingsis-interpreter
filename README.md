@@ -259,21 +259,23 @@ del propio commit publicados en Maven Local; CI no publica paquetes remotos.
 
 ## Entrega continua
 
-El CI verifica; el CD entrega, y entregar es una decisión explícita. El workflow de
-[`.github/workflows/cd.yml`](.github/workflows/cd.yml) corre **solo cuando se tagea una
-versión**:
+Cada push a la rama principal (`master` en este repositorio; también se admite
+`main`) dispara CI. Un merge de PR produce ese mismo push. Si CI termina bien, el
+workflow de [CD](.github/workflows/cd.yml) toma **exactamente el SHA validado**, crea
+una versión única `0.2.0-main.<id-del-ci>.<intento>.<sha>`, publica los módulos en GitHub
+Packages y valida esos paquetes con el CI del fork del TCK.
+
+Para una versión estable, también se puede enviar un tag:
 
 ```sh
 git tag v0.2.0
 git push origin v0.2.0
 ```
 
-El tag es la única fuente del número de versión: se le saca la `v` y se pasa como
-`-PprintscriptVersion`, así el jar publicado, el zip de la CLI y el tag dicen siempre lo
-mismo. Antes de publicar corre `./gradlew build` completo y el TCK local. Tras
-publicar los módulos, prepara una rama en el fork del TCK desde el commit oficial
-fijado, añade los adapters y dependencias, espera el workflow de ese fork y solo
-crea el GitHub Release si ese CI termina correctamente.
+En ese caso, el tag define la versión y el CD también crea el GitHub Release con la
+CLI. En ambos caminos vuelve a correr `./gradlew build` y el TCK local antes de
+publicar. Tras publicar los módulos, prepara una rama en el fork desde el commit
+oficial fijado, añade los adapters y dependencias, y espera el CI de ese fork.
 
 El CD requiere `TCK_FORK_TOKEN` en este repositorio, con acceso de escritura al fork
 `Vontk/printscript-tck`, permiso para actualizar workflows y leer Actions. El fork
@@ -281,7 +283,8 @@ requiere `TCK_PACKAGES_USER` y `TCK_PACKAGES_TOKEN` para leer los paquetes de
 `ingsis-ua/ingsis-interpreter`. La rama enviada al fork queda asociada a la versión
 y al ID de ejecución; el CD enlaza la corrida exacta por su SHA.
 
-Publica dos cosas:
+El CD publica los módulos en cada push validado a la rama principal. Con un tag,
+además publica el ejecutable:
 
 - **El ejecutable de la CLI** como [GitHub Release](../../releases): `printscript-<version>.zip`
   y `.tar`. Se descarga, se descomprime y se corre sin compilar nada. Requiere **Java 21**.

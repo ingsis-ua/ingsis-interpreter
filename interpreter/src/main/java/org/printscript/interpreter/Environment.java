@@ -32,12 +32,14 @@ public final class Environment {
     }
 
     public Optional<Environment> assign(String name, Object value) {
-        Optional<Variable> existing = variables.read(name);
-        if (existing.isEmpty() || existing.get().immutable()) {
-            return Optional.empty();
-        }
-        Variable updated = new Variable(existing.get().declaredType(), value, false);
-        return variables.replace(name, updated).map(Environment::new);
+        return variables
+                .read(name)
+                .filter(existing -> !existing.immutable())
+                .flatMap(
+                        existing ->
+                                variables.replace(
+                                        name, new Variable(existing.declaredType(), value, false)))
+                .map(Environment::new);
     }
 
     public Optional<Variable> read(String name) {
