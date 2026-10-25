@@ -7,18 +7,19 @@ import org.printscript.token.Token;
 import org.printscript.token.TokenType;
 
 // reconoce números, enteros y con coma decimal
-public final class NumberTokenConstructor implements TokenConstructor {
+public final class NumberTokenConstructor extends OffsetTokenConstructor {
 
     @Override
-    public Optional<Token> tryBuild(String rest, Position start) {
-        int length = digitsFrom(rest, 0);
-        if (length == 0) {
+    public Optional<Token> tryBuild(String line, int from, Position start) {
+        int last = digitsFrom(line, from);
+        if (last == from) {
             return Optional.empty();
         }
-        if (hasDecimalPartAt(rest, length)) {
-            length = digitsFrom(rest, length + 1);
+        if (hasDecimalPartAt(line, last)) {
+            last = digitsFrom(line, last + 1);
         }
-        String lexeme = rest.substring(0, length);
+        int length = last - from;
+        String lexeme = line.substring(from, last);
         Position end = new Position(start.line(), start.column() + length - 1);
         return Optional.of(new Token(TokenType.NUMBER, lexeme, new Range(start, end)));
     }

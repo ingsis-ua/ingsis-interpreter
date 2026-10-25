@@ -8,7 +8,7 @@ import org.printscript.token.Token;
 import org.printscript.token.TokenType;
 
 // reconoce los simbolos: + - * / = ; : ( )
-public final class SymbolTokenConstructor implements TokenConstructor {
+public final class SymbolTokenConstructor extends OffsetTokenConstructor {
 
     private final Map<String, TokenType> symbols;
 
@@ -17,10 +17,10 @@ public final class SymbolTokenConstructor implements TokenConstructor {
     }
 
     @Override
-    public Optional<Token> tryBuild(String rest, Position start) {
+    public Optional<Token> tryBuild(String line, int from, Position start) {
         String longest = null;
         for (String lexeme : symbols.keySet()) {
-            if (rest.startsWith(lexeme) && isLongerThan(lexeme, longest)) {
+            if (line.startsWith(lexeme, from) && isLongerThan(lexeme, longest)) {
                 longest = lexeme;
             }
         }
