@@ -11,6 +11,10 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -194,8 +198,51 @@ class InteractiveShellTest {
     void helpExplainsLanguageVersionAndInactiveRules(@TempDir Path dir) {
         Output result = run(dir, "help\nexit\n");
 
-        assertTrue(result.out().contains("version [1.0|1.1]"), result.out());
+        assertTrue(result.out().contains("version|v [1.0|1.1]"), result.out());
         assertTrue(result.out().contains("sintaxis y la semántica"), result.out());
         assertTrue(result.out().contains("solo revisa sintaxis"), result.out());
+    }
+
+    @Test
+    void helpNamesEveryAliasOfEveryCommand(@TempDir Path dir) {
+        Output result = run(dir, "help\nexit\n");
+
+        Set<String> named =
+                result.out()
+                        .lines()
+                        .filter(line -> line.startsWith("    ") && !line.startsWith("      "))
+                        .map(line -> line.strip().split("\\s", 2)[0])
+                        .flatMap(column -> Arrays.stream(column.split("\\|")))
+                        .collect(Collectors.toSet());
+
+        for (String alias :
+                List.of(
+                        "help",
+                        "?",
+                        "ayuda",
+                        "pwd",
+                        "ls",
+                        "dir",
+                        "cd",
+                        "execution",
+                        "exec",
+                        "run",
+                        "save",
+                        "guardar",
+                        "validation",
+                        "validate",
+                        "formatting",
+                        "format",
+                        "fmt",
+                        "analyzing",
+                        "analyze",
+                        "lint",
+                        "version",
+                        "v",
+                        "exit",
+                        "quit",
+                        "salir")) {
+            assertTrue(named.contains(alias), "falta '" + alias + "' en la ayuda: " + named);
+        }
     }
 }

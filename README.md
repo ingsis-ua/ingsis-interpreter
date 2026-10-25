@@ -103,7 +103,8 @@ tests.** Antes de agregar una regla, esa división dice dónde va.
 | Herramienta | Qué hace | Sobre qué | Dónde se configura | Cuando falla |
 |---|---|---|---|---|
 | Spotless + google-java-format (AOSP) | escribe el formato del código | `src/**/*.java` y el adapter del TCK (`tck/implementation`) | en ningún lado: el formateador no es configurable a propósito | `./gradlew spotlessApply` |
-| ktlint (vía Spotless) | formatea los archivos de build y de texto | `*.gradle.kts`, `*.md`, `*.yml` | `.editorconfig` | `./gradlew spotlessApply` |
+| ktlint (vía Spotless) | formatea los archivos de build | `*.gradle.kts` | `.editorconfig` | `./gradlew spotlessApply` |
+| Spotless (formato de texto) | salto final en `*.md`; además recorta espacios finales en `*.yml` (en Markdown dos espacios son un salto intencional) | `*.md`, `*.yml`, `*.yaml` | `format("textos")` y `format("markdown")` del `build.gradle.kts` raíz | `./gradlew spotlessApply` |
 | Checkstyle | nombres y errores probables | `src/main` y `src/test` | `config/checkstyle/checkstyle.xml` | leer el reporte en `<modulo>/build/reports/checkstyle` y arreglar a mano |
 | PMD | malas prácticas y complejidad | `src/main` y `src/test` | `config/pmd/ruleset.xml` | leer el reporte en `<modulo>/build/reports/pmd`, arreglar o justificar la supresión |
 | CPD | código duplicado | `src/main` de los trece módulos | tarea `cpdCheck` del `build.gradle.kts` raíz, umbral de 50 tokens | la consola muestra los fragmentos repetidos (también quedan en `build/reports/cpd/cpd.txt`): extraer lo repetido |
@@ -239,6 +240,16 @@ La CLI admite PrintScript **1.0 y 1.1**, con `1.0` como versión inicial. Para u
 | Concatenación | `string + number` en cualquier orden | ✅ |
 | Strings | comillas simples y dobles | ✅ |
 
+Y además, con `--version 1.1`:
+
+| Construcción | Ejemplo | Estado |
+|---|---|---|
+| Boolean | `let listo: boolean = true;` | ✅ |
+| Constante | `const pi: number = 3.14;` | ✅ |
+| If / else / else if | `if (listo) { println(1); } else if (otro) { … } else { … }` | ✅ |
+| Lectura del usuario | `let nombre: string = readInput("Nombre: ");` | ✅ |
+| Variable de entorno | `let puerto: number = readEnv("PORT");` | ✅ |
+
 ## El linter de PrintScript
 
 El *static code analyzer* de la consigna. Analiza los programas del usuario, no nuestro
@@ -355,9 +366,13 @@ common/  token/  ast/     vocabulario y contratos, sin lógica
 runtime-api/              puertos de E/S del programa en ejecución
 configuration/            lectura de la configuración de las herramientas de PrintScript
 lexer/  parser/           etapas del pipeline
-interpreter/  linter/
+semantic/                 tipos, scope y constantes: lo que valida validation
+interpreter/              ejecución
+formatter/  linter/       las herramientas sobre programas PrintScript
 runner/                   orquesta el pipeline de punta a punta
 cli/                      línea de comandos: la única que toca filesystem, System.out/err y exit codes
+tck/                      adapter y scripts para correr el TCK oficial de la cátedra
+scripts/                  publicación desde local y prueba del hook de pre-commit
 docs/arquitectura.md      diagramas de componentes y responsabilidades
 docs/cli.md               guía de uso de la CLI
 ```

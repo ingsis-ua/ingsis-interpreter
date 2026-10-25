@@ -59,7 +59,6 @@ flowchart TD
     token --> common
     ast --> common
     config --> common
-    runtimeapi --> common
 ```
 
 > Las aristas hacia `common` desde los seis motores, `runner` y `cli` se omiten por legibilidad: **todos dependen de `common`**.
@@ -70,7 +69,7 @@ Cinco cosas para leer en ese grafo:
 - **`semantic` está entre el parser y el interpreter**, y es lo que hace que el modo Validation de la consigna valide de verdad la semántica y no solo la sintaxis. Depende de `ast` y no de `parser`: consume el vocabulario, no la gramática.
 - **`runtime-api` es un módulo de puertos**: `OutputPrinter`, `InputProvider` y `EnvProvider`, más el `RuntimePorts` que los junta. No depende de nada: es el único módulo sin una sola dependencia, y eso es lo que permite que `cli` e `interpreter` lo implementen y lo consuman sin conocerse.
 - **Nadie depende de `interpreter`, `linter` ni `formatter`.** Son hojas: lo que más cambia está arriba de todo, donde romperlo no rompe a nadie.
-- **`cli` es el único que toca filesystem, `System.out`/`System.err`, `System.getenv` y códigos de salida**, y el único punto de entrada ejecutable (`org.printscript.cli.Cli.main`). No depende de `lexer`, `parser`, `interpreter`, `ast` ni `token`: solo de `runner`, `runtime-api` y `common`.
+- **`cli` es el único que toca filesystem, `System.out`/`System.err`, `System.getenv` y códigos de salida**, y el único punto de entrada ejecutable (`org.printscript.cli.Cli.main`). Declara solo `runner`, `runtime-api` y `common`, y no usa en su código a `lexer`, `parser`, `interpreter`, `ast` ni `token`. Algunos le llegan de forma transitiva, porque `runner` expone `linter`, `formatter` y `configuration` con `api` (sus tipos aparecen en las firmas de las fachadas) y esos a su vez exponen `ast` o `token`; la regla que importa es que `cli` no programa contra ellos.
 
 ---
 
@@ -232,7 +231,7 @@ Las fachadas del `runner` toman la versión como parámetro y mantienen además 
 
 ## 7. El módulo `runner`
 
-Es el único lugar del sistema donde el lexer y el parser se conocen entre sí. `ExecutionRunner` recibe el iterador de líneas y un `OutputPrinter`, le pide a las tres factories las piezas del pipeline, encadena `Lexer` → `TokenBuffer` → `Parser` → `Interpreter` y corre el bucle `while (hasNext) next`. El armado de la cadena lexer→buffer→parser vive en `StatementStreams`, una clase package-private con una única función estática que comparten las dos fachadas: la construcción existe en un solo lugar.
+Es el único lugar del sistema donde el lexer y el parser se conocen entre sí. `ExecutionRunner` recibe el iterador de líneas y un `OutputPrinter`, le pide a las factories de cada etapa (`LexerFactory`, `ParserFactory`, `SemanticFactory`, `InterpreterFactory`) las piezas del pipeline, encadena `Lexer` → `TokenBuffer` → `Parser` → `SemanticAnalyzer` → `Interpreter` y corre el bucle `while (hasNext) next`. El armado de las cadenas vive en `StatementStreams`, una clase package-private con dos funciones estáticas —`statementStream` y `validatedStatementStream`— que comparten las fachadas: la construcción existe en un solo lugar.
 
 `ValidationRunner` es la segunda fachada: arma la misma cadena pero se detiene antes del interpreter, sin `OutputPrinter` — la firma de `validate` ni siquiera recibe uno. Recorre el flujo de sentencias, junta los `Failure` con su mensaje y su `Range`, y no ejecuta nada: validar un programa con `println` no imprime.
 
@@ -297,8 +296,9 @@ Es una etapa más del pipeline: implementa `Iterator<Result<List<Violation>>>` y
 
 | Clave del archivo | Qué prende | Valores |
 |---|---|---|
-| `identifier_format` | El formato exigido a los identificadores | `camel case` (también `camelCase` y `camel_case`) |
+| `identifier_format` | El formato exigido a los identificadores | `camel case` o `snake case`, cada uno con sus tres escrituras (`camelCase`, `camel_case`, …) |
 | `mandatory-variable-or-literal-in-println` | Que `println` reciba solo un identificador o un literal | `true` / `false` |
+| `mandatory-variable-or-literal-in-readInput` | Lo mismo para el argumento de `readInput` | `true` / `false` |
 
 Una clave ausente deja la regla apagada. Un valor **desconocido** en `identifier_format` rompe con un mensaje que nombra el valor recibido y los soportados, en vez de apagar la regla en silencio. Un valor del tipo equivocado en cualquier clave conocida también rompe: `RulesConfiguration` nombra la clave, el tipo esperado y el valor. Cada configuración expone sus claves (`LinterConfiguration.KEYS`, `FormatterConfiguration.KEYS`) y la CLI avisa por las que no conoce ninguna de las dos.
 

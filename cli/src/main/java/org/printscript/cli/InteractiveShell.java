@@ -241,14 +241,21 @@ final class InteractiveShell {
 
     private void printFileCommands() {
         out.println("  Sobre un archivo .ps");
-        helpLine("run|exec <archivo>", "Ejecuta el archivo e imprime la salida por pantalla");
         helpLine(
-                "save <archivo>",
+                "run|exec|execution <archivo>",
+                "Ejecuta el archivo e imprime la salida por pantalla");
+        helpLine(
+                "save|guardar <archivo>",
                 "Como run, y además guarda la salida en <fuente>.out.txt junto al .ps");
         helpLine(
-                "validate <archivo>", "Valida la sintaxis y la semántica sin ejecutar el programa");
-        helpLine("format <archivo> [config]", "Formatea el archivo e imprime el resultado");
-        helpLine("analyze <archivo> [config]", "Lintea el archivo y reporta las violaciones");
+                "validate|validation <archivo>",
+                "Valida la sintaxis y la semántica sin ejecutar el programa");
+        helpLine(
+                "format|fmt|formatting <archivo> [config]",
+                "Formatea el archivo e imprime el resultado");
+        helpLine(
+                "analyze|lint|analyzing <archivo> [config]",
+                "Lintea el archivo y reporta las violaciones");
         out.println();
     }
 
@@ -256,7 +263,6 @@ final class InteractiveShell {
         out.println("    [config] es un archivo de reglas .json/.yaml/.yml (opcional):");
         out.println("      · format sin [config]  → no aplica reglas de formato; muestra un aviso");
         out.println("      · analyze sin [config] → solo revisa sintaxis; muestra un aviso");
-        out.println("      · alias: exec=execution, format=fmt=formatting, analyze=lint=analyzing");
         out.println();
     }
 
@@ -270,12 +276,12 @@ final class InteractiveShell {
 
     private void printSessionCommands() {
         out.println("  Sesión");
-        helpLine("version [1.0|1.1]", "Muestra o cambia la versión del lenguaje (inicial: 1.0)");
-        helpLine("help|?", "Muestra esta ayuda");
-        helpLine("exit|quit", "Sale de la interfaz (también con Ctrl-D)");
+        helpLine("version|v [1.0|1.1]", "Muestra o cambia la versión del lenguaje (inicial: 1.0)");
+        helpLine("help|?|ayuda", "Muestra esta ayuda");
+        helpLine("exit|quit|salir", "Sale de la interfaz (también con Ctrl-D)");
     }
 
     private void helpLine(String command, String description) {
-        out.println(String.format(Locale.ROOT, "    %-28s%s", command, description));
+        out.println(String.format(Locale.ROOT, "    %-42s%s", command, description));
     }
 }
