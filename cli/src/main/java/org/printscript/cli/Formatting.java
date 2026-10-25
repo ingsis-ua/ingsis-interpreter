@@ -8,6 +8,7 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Iterator;
 import java.util.List;
 import org.printscript.common.Failure;
@@ -82,15 +83,43 @@ final class Formatting {
             Path outputFile,
             PrintStream err,
             Version version) {
-        try (Writer destination = Files.newBufferedWriter(outputFile, StandardCharsets.UTF_8)) {
-            List<Failure<?>> failures =
-                    new FormattingRunner().format(lines, configuration, destination, version);
-            ExitCode code = finish(failures, err);
-            err.println("Código formateado guardado en " + outputFile);
-            return code;
+        Path target = outputFile.toAbsolutePath();
+        Path draft = null;
+        try {
+            draft = Files.createTempFile(target.getParent(), ".formatting-", ".tmp");
+            List<Failure<?>> failures = formatInto(draft, lines, configuration, version);
+            if (failures.isEmpty()) {
+                Files.move(draft, target, StandardCopyOption.REPLACE_EXISTING);
+                err.println("Código formateado guardado en " + outputFile);
+            }
+            return finish(failures, err);
         } catch (IOException e) {
             err.println("No se pudo escribir '" + outputFile + "': " + e.getMessage());
             return ExitCode.USAGE_ERROR;
+        } finally {
+            discard(draft);
+        }
+    }
+
+    private static List<Failure<?>> formatInto(
+            Path draft,
+            Iterator<String> lines,
+            FormatterConfiguration configuration,
+            Version version)
+            throws IOException {
+        try (Writer destination = Files.newBufferedWriter(draft, StandardCharsets.UTF_8)) {
+            return new FormattingRunner().format(lines, configuration, destination, version);
+        }
+    }
+
+    private static void discard(Path draft) {
+        if (draft == null) {
+            return;
+        }
+        try {
+            Files.deleteIfExists(draft);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 

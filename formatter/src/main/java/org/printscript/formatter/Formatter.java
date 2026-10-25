@@ -1,6 +1,7 @@
 package org.printscript.formatter;
 
 import java.util.Iterator;
+import java.util.Optional;
 import org.printscript.common.Failure;
 import org.printscript.common.Result;
 import org.printscript.common.Success;
@@ -17,6 +18,7 @@ public final class Formatter implements Iterator<Result<String>> {
     private final Gaps gaps;
 
     private Token previous;
+    private Optional<Failure<String>> pendingFailure = Optional.empty();
 
     public Formatter(Iterator<Token> tokens, FormatterConfiguration configuration) {
         this.tokens = tokens;
@@ -25,18 +27,23 @@ public final class Formatter implements Iterator<Result<String>> {
 
     @Override
     public boolean hasNext() {
-        return tokens.hasNext();
+        return pendingFailure.isPresent() || tokens.hasNext();
     }
 
     @Override
     public Result<String> next() {
+        if (pendingFailure.isPresent()) {
+            Failure<String> failure = pendingFailure.get();
+            pendingFailure = Optional.empty();
+            return failure;
+        }
         Token token = tokens.next();
         if (token.type() == TokenType.UNKNOWN) {
-            // el símbolo no se emite, pero su posición sí avanza el estado: así el espacio
-            // del token siguiente se mide contra él y no contra el token anterior
-            gaps.advancePast(previous, token);
-            previous = token;
-            return new Failure<>("Símbolo no reconocido: '" + token.value() + "'", token.range());
+            pendingFailure =
+                    Optional.of(
+                            new Failure<>(
+                                    "Símbolo no reconocido: '" + token.value() + "'",
+                                    token.range()));
         }
         String piece = space(token) + lexemeOf(token);
         gaps.advancePast(previous, token);
