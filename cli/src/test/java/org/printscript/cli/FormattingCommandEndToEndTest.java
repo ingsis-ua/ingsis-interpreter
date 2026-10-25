@@ -1,6 +1,7 @@
 package org.printscript.cli;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -76,6 +77,43 @@ class FormattingCommandEndToEndTest {
 
         assertEquals(1, result.exitCode());
         assertTrue(result.stderr().contains("error:"), result.stderr());
+    }
+
+    @Test
+    void anUnreadableSymbolIsKeptInTheFormattedCode() throws IOException {
+        Path source = write("ilegible.ps", "let x: number = 5 @ 3;\nprintln(\"abc);\n");
+
+        CliTestSupport.Result result = CliTestSupport.run(COMANDO, source.toString());
+
+        assertEquals(1, result.exitCode());
+        assertTrue(result.stdout().contains("let x: number = 5 @ 3;"), result.stdout());
+        assertTrue(result.stdout().contains("println(\"abc);"), result.stdout());
+    }
+
+    @Test
+    void formattingA11ProgramAsVersion10KeepsItsBraces() throws IOException {
+        Path source = write("if.ps", "if (flag) {\n  println(1);\n} else {\n  println(2);\n}\n");
+
+        CliTestSupport.Result result =
+                CliTestSupport.run("--version", "1.0", COMANDO, source.toString());
+
+        assertEquals(1, result.exitCode());
+        assertTrue(
+                result.stdout().contains("if (flag) {\n  println(1);\n} else {\n  println(2);\n}"),
+                result.stdout());
+    }
+
+    @Test
+    void withFailuresTheOutputFileIsNeitherWrittenNorReportedAsSaved() throws IOException {
+        Path source = write("ilegible.ps", "let x: number = 5 @ 3;\n");
+        Path output = write("previo.ps", "contenido previo\n");
+
+        CliTestSupport.Result result =
+                CliTestSupport.run(COMANDO, source.toString(), "-o", output.toString());
+
+        assertEquals(1, result.exitCode());
+        assertFalse(result.stderr().contains("guardado"), result.stderr());
+        assertEquals("contenido previo\n", Files.readString(output, StandardCharsets.UTF_8));
     }
 
     @Test

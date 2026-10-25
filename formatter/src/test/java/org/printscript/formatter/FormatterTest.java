@@ -1,13 +1,12 @@
 package org.printscript.formatter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.printscript.common.Failure;
-import org.printscript.common.Result;
 import org.printscript.common.Success;
 import org.printscript.common.Version;
 import org.printscript.formatter.config.FormatterConfiguration;
@@ -216,16 +215,39 @@ class FormatterTest {
     }
 
     @Test
-    void unknownSymbolsAreReportedAsFailuresInsteadOfBeingWritten() {
-        Formatter formatter = formatterOver("let a: number = #;", FormatterConfiguration.none());
+    void unknownSymbolsAreReportedAsFailuresAndStillWritten() {
+        String source = "let x: number = 5 @ 3;";
+        Formatter formatter = formatterOver(source, FormatterConfiguration.none());
 
-        boolean sawFailure = false;
+        StringBuilder written = new StringBuilder();
+        List<String> failures = new ArrayList<>();
         while (formatter.hasNext()) {
-            Result<String> piece = formatter.next();
-            sawFailure = sawFailure || piece instanceof Failure<String>;
+            switch (formatter.next()) {
+                case Success<String> piece -> written.append(piece.value());
+                case Failure<String> failure -> failures.add(failure.message());
+            }
         }
 
-        assertTrue(sawFailure, "el símbolo desconocido tiene que llegar como Failure");
+        assertEquals(source, written.toString());
+        assertEquals(List.of("Símbolo no reconocido: '@'"), failures);
+    }
+
+    @Test
+    void anUnclosedStringKeepsTheRestOfItsLine() {
+        String source = "println(\"abc);\nprintln(x);";
+        Formatter formatter = formatterOver(source, FormatterConfiguration.none());
+
+        StringBuilder written = new StringBuilder();
+        List<String> failures = new ArrayList<>();
+        while (formatter.hasNext()) {
+            switch (formatter.next()) {
+                case Success<String> piece -> written.append(piece.value());
+                case Failure<String> failure -> failures.add(failure.message());
+            }
+        }
+
+        assertEquals(source, written.toString());
+        assertEquals(1, failures.size());
     }
 
     // el lexer descarta la comilla que delimitaba el string, así que el formatter tiene que
