@@ -22,8 +22,8 @@ public final class StringTokenConstructor implements TokenConstructor {
         if (closing < 0) {
             return Optional.of(new Token(TokenType.UNKNOWN, rest, rangeOf(start, rest.length())));
         }
-        String content = rest.substring(1, closing);
-        return Optional.of(new Token(TokenType.STRING, content, rangeOf(start, closing + 1)));
+        String lexeme = rest.substring(0, closing + 1);
+        return Optional.of(new Token(TokenType.STRING, lexeme, rangeOf(start, closing + 1)));
     }
 
     private static Range rangeOf(Position start, int length) {

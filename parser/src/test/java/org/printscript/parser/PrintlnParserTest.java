@@ -37,7 +37,8 @@ class PrintlnParserTest {
     }
 
     private static Token string(String value, int column) {
-        return new Token(TokenType.STRING, value, range(column, column + value.length() + 1));
+        return new Token(
+                TokenType.STRING, "\"" + value + "\"", range(column, column + value.length() + 1));
     }
 
     private static TokenBuffer bufferOf(Token... tokens) {

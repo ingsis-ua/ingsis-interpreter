@@ -25,7 +25,7 @@ class StringTokenConstructorTest {
         Token token = buildAt("\"Joe\"", new Position(1, 1));
 
         assertEquals(TokenType.STRING, token.type());
-        assertEquals("Joe", token.value());
+        assertEquals("\"Joe\"", token.value());
         assertEquals(new Range(new Position(1, 1), new Position(1, 5)), token.range());
     }
 
@@ -34,7 +34,7 @@ class StringTokenConstructorTest {
         Token token = buildAt("'Joe'", new Position(1, 1));
 
         assertEquals(TokenType.STRING, token.type());
-        assertEquals("Joe", token.value());
+        assertEquals("'Joe'", token.value());
         assertEquals(new Range(new Position(1, 1), new Position(1, 5)), token.range());
     }
 
@@ -42,7 +42,7 @@ class StringTokenConstructorTest {
     void theOtherQuoteIsPartOfTheContent() {
         Token token = buildAt("\"it's\"", new Position(1, 1));
 
-        assertEquals("it's", token.value());
+        assertEquals("\"it's\"", token.value());
         assertEquals(new Range(new Position(1, 1), new Position(1, 6)), token.range());
     }
 
@@ -51,7 +51,7 @@ class StringTokenConstructorTest {
         Token token = buildAt("''", new Position(1, 1));
 
         assertEquals(TokenType.STRING, token.type());
-        assertEquals("", token.value());
+        assertEquals("''", token.value());
         assertEquals(new Range(new Position(1, 1), new Position(1, 2)), token.range());
     }
 

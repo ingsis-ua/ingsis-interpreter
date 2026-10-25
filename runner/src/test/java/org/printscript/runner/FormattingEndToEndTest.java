@@ -53,6 +53,18 @@ class FormattingEndToEndTest {
     }
 
     @Test
+    void withoutRulesTheLinesComeOutJoinedExactlyAsTheyWere() {
+        String[] lines = {"", "", "println(1);", "", "println(2);", "", ""};
+
+        assertEquals(String.join("\n", lines), format(FormatterConfiguration.none(), lines));
+    }
+
+    @Test
+    void aSourceWithOnlyBlankLinesKeepsThem() {
+        assertEquals("\n\n", format(FormatterConfiguration.none(), "", "", ""));
+    }
+
+    @Test
     @SuppressWarnings("PMD.CloseResource") // The test writer owns no resource.
     void writingFailureIsReportedToTheCaller() {
         Writer failing =
