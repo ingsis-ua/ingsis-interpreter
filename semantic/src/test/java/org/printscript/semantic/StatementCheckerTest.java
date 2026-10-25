@@ -263,7 +263,7 @@ class StatementCheckerTest {
     }
 
     @Test
-    void aBooleanDoesNotTakePartInBinaryOperations() {
+    void aBooleanOnlyTakesPartInAConcatenationWithAString() {
         assertEquals(
                 "No se puede aplicar + entre boolean y number",
                 failureOf(
@@ -275,15 +275,20 @@ class StatementCheckerTest {
                                                 Operator.PLUS,
                                                 number(1, Ast.ANY))))
                         .message());
+        assertPasses(
+                declare(
+                        "y",
+                        STRING,
+                        binary(text(HOLA, Ast.ANY), Operator.PLUS, Ast.bool(false, Ast.ANY))));
         assertEquals(
-                "No se puede aplicar + entre string y boolean",
+                "No se puede aplicar - entre string y boolean",
                 failureOf(
                                 declare(
-                                        "y",
+                                        "z",
                                         STRING,
                                         binary(
                                                 text(HOLA, Ast.ANY),
-                                                Operator.PLUS,
+                                                Operator.MINUS,
                                                 Ast.bool(false, Ast.ANY))))
                         .message());
     }

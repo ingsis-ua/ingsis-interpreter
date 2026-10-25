@@ -111,15 +111,17 @@ final class ExpressionTyper extends ExpressionOnlyVisitor<Result<Type>> {
     }
 
     // la concatenación es el único caso donde los dos lados pueden tener tipos distintos
-    // un boolean no participa de ninguna: ni se suma, ni se resta, ni se concatena
     private static Result<Type> combine(
             Type left, Operator operator, Type right, BinaryExpression expression) {
+        boolean anyString = left == Type.STRING || right == Type.STRING;
+        if (operator == Operator.PLUS && anyString) {
+            return new Success<>(Type.STRING);
+        }
         if (left == Type.BOOLEAN || right == Type.BOOLEAN) {
             return arithmeticFailure(operator, left, right, expression.range());
         }
         if (operator == Operator.PLUS) {
-            boolean anyString = left == Type.STRING || right == Type.STRING;
-            return new Success<>(anyString ? Type.STRING : Type.NUMBER);
+            return new Success<>(Type.NUMBER);
         }
         if (left != Type.NUMBER || right != Type.NUMBER) {
             return arithmeticFailure(operator, left, right, expression.range());
