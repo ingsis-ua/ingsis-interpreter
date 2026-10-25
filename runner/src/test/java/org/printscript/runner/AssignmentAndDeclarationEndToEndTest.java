@@ -99,12 +99,14 @@ class AssignmentAndDeclarationEndToEndTest {
     }
 
     @Test
-    void printingAnUninitializedVariableCurrentlyPrintsNull() {
+    void printingAnUninitializedVariableIsRejectedInsteadOfPrintingNull() {
         InMemoryPrinter printer = new InMemoryPrinter();
 
         List<Failure<?>> failures = runProgram(printer, "let x: number;", PRINTLN_X);
 
-        assertEquals(List.of("null"), printer.lines);
-        assertEquals(List.of(), failures);
+        assertEquals(List.of(), printer.lines);
+        assertEquals(1, failures.size());
+        assertEquals("Variable usada antes de asignarse: x", failures.getFirst().message());
+        assertRange(failures.getFirst().range(), 2, 9, 2, 9);
     }
 }

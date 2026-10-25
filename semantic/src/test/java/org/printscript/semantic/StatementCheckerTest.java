@@ -56,7 +56,7 @@ class StatementCheckerTest {
     void aDeclarationWithoutInitializerPassesAndDeclaresTheVariable() {
         assertPasses(declare("x", NUMBER, null));
 
-        assertPasses(println(name("x", Ast.ANY)));
+        assertPasses(assign("x", Ast.ANY, number(1, Ast.ANY)));
     }
 
     @Test
