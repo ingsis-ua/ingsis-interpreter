@@ -11,6 +11,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.printscript.common.Position;
 import org.printscript.common.Range;
+import org.printscript.common.Version;
 import org.printscript.linter.Violation;
 import org.printscript.linter.config.IdentifierFormat;
 import org.printscript.linter.config.LinterConfiguration;
@@ -111,6 +112,20 @@ class LintingEndToEndTest {
                                                 + " true}"),
                                 "json");
 
+        assertEquals(1, report.violations().size());
+    }
+
+    @Test
+    void theConfigurationFromAJsonFileRespectsTheRequestedVersion() {
+        AnalysisReport report =
+                new AnalyzingRunner()
+                        .analyze(
+                                List.of("let a: string = readInput(\"a\" + \"b\");").iterator(),
+                                jsonOf("{\"mandatory-variable-or-literal-in-readInput\": true}"),
+                                "json",
+                                Version.V11);
+
+        assertEquals(List.of(), report.failures());
         assertEquals(1, report.violations().size());
     }
 

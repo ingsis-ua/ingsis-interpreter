@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.printscript.common.Failure;
+import org.printscript.common.Version;
 import org.printscript.formatter.config.FormatterConfiguration;
 import org.printscript.runtime.OutputPrinter;
 
@@ -50,6 +51,27 @@ class FormattingEndToEndTest {
                 new FormattingRunner().format(List.of(lines).iterator(), configuration, output);
         assertEquals(List.of(), failures);
         return output.toString();
+    }
+
+    @Test
+    void theConfigurationFromAJsonFileRespectsTheRequestedVersion() throws IOException {
+        StringWriter output = new StringWriter();
+        List<Failure<?>> failures;
+        try (InputStream configuration =
+                new ByteArrayInputStream(
+                        "{\"indent-inside-if\": 2}".getBytes(StandardCharsets.UTF_8))) {
+            failures =
+                    new FormattingRunner()
+                            .format(
+                                    List.of("if (true) {", "println(1);", "}").iterator(),
+                                    configuration,
+                                    "json",
+                                    output,
+                                    Version.V11);
+        }
+
+        assertEquals(List.of(), failures);
+        assertEquals("if (true) {\n  println(1);\n}", output.toString());
     }
 
     @Test

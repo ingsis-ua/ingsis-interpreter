@@ -36,10 +36,16 @@ public final class AnalyzingRunner {
 
     public AnalysisReport analyze(
             Iterator<String> lines, InputStream configuration, String format) {
+        return analyze(lines, configuration, format, Version.V10);
+    }
+
+    public AnalysisReport analyze(
+            Iterator<String> lines, InputStream configuration, String format, Version version) {
         return analyze(
                 lines,
                 LinterConfiguration.from(
-                        ConfigurationReader.standard().read(configuration, format)));
+                        ConfigurationReader.standard().read(configuration, format)),
+                version);
     }
 
     private static void collect(

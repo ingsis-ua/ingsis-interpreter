@@ -42,11 +42,21 @@ public final class FormattingRunner {
 
     public List<Failure<?>> format(
             Iterator<String> lines, InputStream configuration, String format, Writer destination) {
+        return format(lines, configuration, format, destination, Version.V10);
+    }
+
+    public List<Failure<?>> format(
+            Iterator<String> lines,
+            InputStream configuration,
+            String format,
+            Writer destination,
+            Version version) {
         return format(
                 lines,
                 FormatterConfiguration.from(
                         ConfigurationReader.standard().read(configuration, format)),
-                destination);
+                destination,
+                version);
     }
 
     private static void write(
