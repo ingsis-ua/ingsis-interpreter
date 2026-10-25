@@ -86,6 +86,11 @@ class OnlyVisitorsTest {
         }
 
         @Override
+        public String visitUnaryExpression(UnaryExpression unary) {
+            return "unaria";
+        }
+
+        @Override
         public String visitReadInput(ReadInput readInput) {
             return "readInput";
         }
@@ -108,7 +113,8 @@ class OnlyVisitorsTest {
                         new NumberLiteral(2, RANGE),
                         RANGE),
                 new ReadInput(new StringLiteral("x", RANGE), RANGE),
-                new ReadEnv(new StringLiteral("X", RANGE), RANGE));
+                new ReadEnv(new StringLiteral("X", RANGE), RANGE),
+                new UnaryExpression(Operator.MINUS, new NumberLiteral(1, RANGE), RANGE));
     }
 
     private static List<Statement> everyStatement() {
@@ -163,7 +169,8 @@ class OnlyVisitorsTest {
                         "identificador",
                         "binaria",
                         "readInput",
-                        "readEnv"),
+                        "readEnv",
+                        "unaria"),
                 everyExpression().stream().map(expression -> expression.accept(visitor)).toList());
     }
 }

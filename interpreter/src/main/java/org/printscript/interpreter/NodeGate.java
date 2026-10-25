@@ -19,6 +19,7 @@ import org.printscript.ast.ReadEnv;
 import org.printscript.ast.ReadInput;
 import org.printscript.ast.Statement;
 import org.printscript.ast.StringLiteral;
+import org.printscript.ast.UnaryExpression;
 import org.printscript.ast.VariableDeclaration;
 import org.printscript.common.Failure;
 import org.printscript.common.Range;
@@ -62,6 +63,14 @@ final class NodeGate implements ASTVisitor<Optional<Failure<Void>>> {
                 binaryExpression.range(),
                 () -> binaryExpression.left().accept(this),
                 () -> binaryExpression.right().accept(this));
+    }
+
+    @Override
+    public Optional<Failure<Void>> visitUnaryExpression(UnaryExpression unaryExpression) {
+        return node(
+                unaryExpression,
+                unaryExpression.range(),
+                () -> unaryExpression.operand().accept(this));
     }
 
     @Override

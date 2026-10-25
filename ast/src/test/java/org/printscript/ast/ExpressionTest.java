@@ -20,6 +20,7 @@ class ExpressionTest {
             case BooleanLiteral bool -> "boolean:" + bool.value();
             case Identifier identifier -> "identifier:" + identifier.name();
             case BinaryExpression binary -> "binary:" + binary.operator();
+            case UnaryExpression unary -> "unary:" + unary.operator();
             case ReadInput input -> "readInput";
             case ReadEnv env -> "readEnv";
         };

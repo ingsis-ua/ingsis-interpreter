@@ -51,6 +51,14 @@ class ASTVisitorTest {
         }
 
         @Override
+        public String visitUnaryExpression(UnaryExpression unaryExpression) {
+            return "("
+                    + symbol(unaryExpression.operator())
+                    + unaryExpression.operand().accept(this)
+                    + ")";
+        }
+
+        @Override
         public String visitReadInput(ReadInput readInput) {
             return "readInput(" + readInput.prompt().accept(this) + ")";
         }

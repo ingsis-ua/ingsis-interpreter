@@ -35,6 +35,11 @@ public abstract class StatementOnlyVisitor<T> implements ASTVisitor<T> {
     }
 
     @Override
+    public T visitUnaryExpression(UnaryExpression unaryExpression) {
+        return notAStatement(unaryExpression.range());
+    }
+
+    @Override
     public T visitReadInput(ReadInput readInput) {
         return notAStatement(readInput.range());
     }

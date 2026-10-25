@@ -18,6 +18,7 @@ import org.printscript.ast.ReadInput;
 import org.printscript.ast.Statement;
 import org.printscript.ast.StringLiteral;
 import org.printscript.ast.TypeName;
+import org.printscript.ast.UnaryExpression;
 import org.printscript.ast.VariableDeclaration;
 import org.printscript.common.Position;
 import org.printscript.common.Range;
@@ -33,6 +34,27 @@ class PrintlnArgumentRuleTest {
     private static Expression sum(Range range) {
         return new BinaryExpression(
                 new Identifier(NOMBRE, ANY), Operator.PLUS, new NumberLiteral(1.0, ANY), range);
+    }
+
+    @Test
+    void aNegativeNumberLiteralCountsAsALiteral() {
+        Statement println =
+                new PrintlnStatement(
+                        new UnaryExpression(Operator.MINUS, new NumberLiteral(5, ANY), ANY), ANY);
+
+        assertTrue(rule.check(println).isEmpty());
+    }
+
+    @Test
+    void negatingAnythingElseIsAnExpression() {
+        Range range = new Range(new Position(1, 9), new Position(1, 10));
+        Statement println =
+                new PrintlnStatement(
+                        new UnaryExpression(Operator.MINUS, new Identifier(NOMBRE, ANY), range),
+                        ANY);
+
+        assertEquals(1, rule.check(println).size());
+        assertEquals(range, rule.check(println).getFirst().range());
     }
 
     @Test

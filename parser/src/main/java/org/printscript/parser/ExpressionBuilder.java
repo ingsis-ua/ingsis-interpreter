@@ -11,6 +11,7 @@ import org.printscript.ast.Operator;
 import org.printscript.ast.ReadEnv;
 import org.printscript.ast.ReadInput;
 import org.printscript.ast.StringLiteral;
+import org.printscript.ast.UnaryExpression;
 import org.printscript.common.Failure;
 import org.printscript.common.Range;
 import org.printscript.common.Result;
@@ -76,6 +77,20 @@ public final class ExpressionBuilder {
         return OperatorPrecedence.precedenceOf(operator) + 1;
     }
 
+    private Result<Expression> parseNegation(TokenBuffer tokens, Token minus) {
+        if (!Tokens.isOperator(minus, "-")) {
+            return unexpectedToken(minus);
+        }
+        tokens.commit(1);
+        return parsePrimary(tokens, minus.range())
+                .map(
+                        operand ->
+                                new UnaryExpression(
+                                        Operator.MINUS,
+                                        operand,
+                                        new Range(minus.range().start(), operand.range().end())));
+    }
+
     private static Expression combine(Expression left, Operator operator, Expression right) {
         return new BinaryExpression(
                 left, operator, right, new Range(left.range().start(), right.range().end()));
@@ -94,6 +109,7 @@ public final class ExpressionBuilder {
             case IDENTIFIER -> identifierOrLaterCall(tokens, token);
             case PUNCTUATION -> parsePunctuation(tokens, token);
             case KEYWORD -> parseKeyword(tokens, token);
+            case OPERATOR -> parseNegation(tokens, token);
             default -> unexpectedToken(token);
         };
     }
@@ -200,6 +216,8 @@ public final class ExpressionBuilder {
                     new BinaryExpression(binary.left(), binary.operator(), binary.right(), range);
             case ReadInput read -> new ReadInput(read.prompt(), range);
             case ReadEnv read -> new ReadEnv(read.name(), range);
+            case UnaryExpression unary ->
+                    new UnaryExpression(unary.operator(), unary.operand(), range);
         };
     }
 

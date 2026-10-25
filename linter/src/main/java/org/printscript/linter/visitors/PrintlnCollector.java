@@ -15,6 +15,7 @@ import org.printscript.ast.PrintlnStatement;
 import org.printscript.ast.ReadEnv;
 import org.printscript.ast.ReadInput;
 import org.printscript.ast.StringLiteral;
+import org.printscript.ast.UnaryExpression;
 import org.printscript.ast.VariableDeclaration;
 
 // junta todos los println de una sentencia, incluidos los que están adentro de un bloque.
@@ -76,6 +77,11 @@ public final class PrintlnCollector implements ASTVisitor<List<PrintlnStatement>
 
     @Override
     public List<PrintlnStatement> visitBinaryExpression(BinaryExpression binaryExpression) {
+        return List.of();
+    }
+
+    @Override
+    public List<PrintlnStatement> visitUnaryExpression(UnaryExpression unaryExpression) {
         return List.of();
     }
 

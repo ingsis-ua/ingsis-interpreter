@@ -10,6 +10,7 @@ import org.printscript.ast.Operator;
 import org.printscript.ast.ReadEnv;
 import org.printscript.ast.ReadInput;
 import org.printscript.ast.StringLiteral;
+import org.printscript.ast.UnaryExpression;
 import org.printscript.common.Failure;
 import org.printscript.common.Range;
 import org.printscript.common.Result;
@@ -92,6 +93,23 @@ public final class ExpressionEvaluator extends ExpressionOnlyVisitor<Result<Obje
                                 new Failure<>(
                                         "Variable no declarada: " + identifier.name(),
                                         identifier.range()));
+    }
+
+    @Override
+    public Result<Object> visitUnaryExpression(UnaryExpression unaryExpression) {
+        return unaryExpression
+                .operand()
+                .accept(this)
+                .andThen(value -> negate(value, unaryExpression));
+    }
+
+    private static Result<Object> negate(Object value, UnaryExpression expression) {
+        if (value instanceof Double number) {
+            return new Success<>(-number);
+        }
+        return new Failure<>(
+                "No se puede aplicar " + expression.operator() + " a " + typeOf(value),
+                expression.range());
     }
 
     @Override

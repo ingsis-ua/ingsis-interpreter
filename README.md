@@ -228,6 +228,7 @@ La CLI admite PrintScript **1.0 y 1.1**, con `1.0` como versión inicial. Para u
 | Asignación | `x = 5;` | ✅ |
 | Println | `println(a + " " + b);` | ✅ |
 | Aritmética | `+ - * /` con precedencia y paréntesis | ✅ |
+| Negación | `let x: number = -5;`, `2 * -x` | ✅ |
 | Concatenación | `string + number` en cualquier orden | ✅ |
 | Strings | comillas simples y dobles | ✅ |
 

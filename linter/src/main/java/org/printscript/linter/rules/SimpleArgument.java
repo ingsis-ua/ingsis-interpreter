@@ -8,6 +8,7 @@ import org.printscript.ast.NumberLiteral;
 import org.printscript.ast.ReadEnv;
 import org.printscript.ast.ReadInput;
 import org.printscript.ast.StringLiteral;
+import org.printscript.ast.UnaryExpression;
 
 // qué cuenta como "un identificador o un literal".
 final class SimpleArgument {
@@ -27,6 +28,7 @@ final class SimpleArgument {
             case ReadInput input -> false;
             case ReadEnv env -> false;
             case BinaryExpression binary -> false;
+            case UnaryExpression unary -> unary.operand() instanceof NumberLiteral;
         };
     }
 }

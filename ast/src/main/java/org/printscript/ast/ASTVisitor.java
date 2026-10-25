@@ -14,6 +14,8 @@ public interface ASTVisitor<T> {
 
     T visitBinaryExpression(BinaryExpression binaryExpression);
 
+    T visitUnaryExpression(UnaryExpression unaryExpression);
+
     T visitReadInput(ReadInput readInput);
 
     T visitReadEnv(ReadEnv readEnv);

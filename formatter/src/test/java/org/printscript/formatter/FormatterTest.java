@@ -256,4 +256,24 @@ class FormatterTest {
 
         assertEquals(source, format(source, FormatterConfiguration.none()));
     }
+
+    @Test
+    void theOperationsRuleDoesNotSeparateANegationFromItsOperand() {
+        assertEquals(
+                "println(2 * -3 - -x);", format("println(2*-3- -x);", new Rules().operations()));
+    }
+
+    @Test
+    void singleSpaceSeparationKeepsANegationAttachedToItsOperand() {
+        assertEquals(
+                "let x : number = -5;",
+                format("let  x :  number  =  -  5;", new Rules().singleSpace()));
+    }
+
+    @Test
+    void withoutRulesTheSpaceAfterANegationIsKept() {
+        String source = "println(- 5);";
+
+        assertEquals(source, format(source, FormatterConfiguration.none()));
+    }
 }

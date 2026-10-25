@@ -9,6 +9,7 @@ public sealed interface Expression
                 BooleanLiteral,
                 Identifier,
                 BinaryExpression,
+                UnaryExpression,
                 ReadInput,
                 ReadEnv {
 

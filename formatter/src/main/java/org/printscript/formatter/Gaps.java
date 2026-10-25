@@ -15,6 +15,7 @@ final class Gaps {
 
     private int depth;
     private boolean insidePrintln;
+    private boolean negationPending;
 
     Gaps(FormatterConfiguration configuration) {
         this.configuration = configuration;
@@ -27,6 +28,7 @@ final class Gaps {
     // el estado se actualiza después de decidir el espacio, porque la decisión mira la
     // sentencia que termina, no la que empieza
     void advancePast(Token previous, Token current) {
+        negationPending = isOperator(current, "-") && opensAnOperand(previous);
         if (previous != null && isPunctuation(previous, ";")) {
             insidePrintln = false;
         }
@@ -63,6 +65,10 @@ final class Gaps {
             return result;
         }
         result = afterColon(previous);
+        if (result.isPresent()) {
+            return result;
+        }
+        result = afterNegation(previous, current);
         if (result.isPresent()) {
             return result;
         }
@@ -115,6 +121,20 @@ final class Gaps {
         return configuration.spacingAfterColon() && isPunctuation(previous, ":")
                 ? Optional.of(" ")
                 : Optional.empty();
+    }
+
+    private Optional<String> afterNegation(Token previous, Token current) {
+        boolean spacingRule =
+                configuration.spaceSurroundingOperations() || configuration.singleSpaceSeparation();
+        return negationPending && spacingRule && sameLine(previous, current)
+                ? Optional.of("")
+                : Optional.empty();
+    }
+
+    private static boolean opensAnOperand(Token previous) {
+        return previous == null
+                || previous.type() == TokenType.OPERATOR
+                || isPunctuation(previous, "(");
     }
 
     private Optional<String> aroundOperations(Token previous, Token current) {
