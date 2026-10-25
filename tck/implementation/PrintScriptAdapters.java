@@ -3,7 +3,6 @@ package implementation;
 import interpreter.ErrorHandler;
 import interpreter.InputProvider;
 import interpreter.PrintEmitter;
-
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -11,7 +10,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-
 import org.printscript.common.Failure;
 import org.printscript.common.Position;
 import org.printscript.common.Range;
@@ -40,12 +38,14 @@ final class PrintScriptAdapters {
             case "1.0" -> Version.V10;
             case "1.1" -> Version.V11;
             default ->
-                    throw new IllegalArgumentException("Versión no soportada por la implementación: " + version);
+                    throw new IllegalArgumentException(
+                            "Versión no soportada por la implementación: " + version);
         };
     }
 
     static void report(List<? extends Failure<?>> failures, ErrorHandler handler) {
-        failures.forEach(failure -> handler.reportError(describe(failure.message(), failure.range())));
+        failures.forEach(
+                failure -> handler.reportError(describe(failure.message(), failure.range())));
     }
 
     static String describe(String message, Range range) {

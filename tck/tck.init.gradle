@@ -1,5 +1,18 @@
 // Adaptación reproducible del TCK oficial a los artefactos de este repository.
 // Se aplica con Gradle 9.5 desde tck/run-official-tck.sh; no modifica el clon del TCK.
+initscript {
+    repositories {
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath 'org.gradle.toolchains:foojay-resolver:1.0.0'
+    }
+}
+
+beforeSettings { settings ->
+    settings.pluginManager.apply(org.gradle.toolchains.foojay.FoojayToolchainsConventionPlugin)
+}
+
 def published = System.getenv('PRINTSCRIPT_TCK_SOURCE_MODE') == '--published'
 def implementationVersion = System.getenv('PRINTSCRIPT_TCK_VERSION')
 if (!implementationVersion) {

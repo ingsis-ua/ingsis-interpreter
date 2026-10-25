@@ -9,10 +9,7 @@ import static implementation.PrintScriptAdapters.versionOf;
 import interpreter.PrintScriptFormatter;
 import interpreter.PrintScriptInterpreter;
 import interpreter.PrintScriptLinter;
-
 import java.io.InputStream;
-import java.io.Writer;
-
 import org.printscript.config.ConfigurationReader;
 import org.printscript.config.RulesConfiguration;
 import org.printscript.formatter.config.FormatterConfiguration;
@@ -38,8 +35,7 @@ public class CustomImplementationFactory implements PrintScriptFactory {
         return (src, version, emitter, handler, provider) -> {
             PrintScriptAdapters.EmittingPrinter printer =
                     new PrintScriptAdapters.EmittingPrinter(emitter);
-            RuntimePorts ports =
-                    new RuntimePorts(printer, inputPort(provider, printer), envPort());
+            RuntimePorts ports = new RuntimePorts(printer, inputPort(provider, printer), envPort());
             // Si el consumidor de la salida se queda sin memoria, el error llega desde
             // adentro del bucle de ejecución: el TCK lo espera reportado como un error más
             // y no como una JVM que se cae. Es el único caso en el que atrapar un Error en
