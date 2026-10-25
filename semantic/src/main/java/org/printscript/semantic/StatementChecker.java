@@ -78,7 +78,8 @@ public final class StatementChecker extends StatementOnlyVisitor<Result<Void>> {
         // la tabla decide si ya estaba declarada, y solo mira el scope actual: el mismo
         // nombre en un bloque más interno es sombra, no redeclaración
         Optional<SymbolTable> updated =
-                symbols.declare(name, new Symbol(declared.get(), immutable));
+                symbols.declare(
+                        name, new Symbol(declared.get(), immutable), initializer.isPresent());
         if (updated.isEmpty()) {
             // el rango es el de la declaración entera, como venía reportándolo el
             // intérprete: lo que está de más es la sentencia, no el nombre
@@ -113,7 +114,9 @@ public final class StatementChecker extends StatementOnlyVisitor<Result<Void>> {
         if (declared.get().immutable()) {
             return new Failure<>("No se puede reasignar la constante " + name, assignment.range());
         }
-        return checkAssignable(assignment.expression(), declared.get().type());
+        Result<Void> checked = checkAssignable(assignment.expression(), declared.get().type());
+        symbols = symbols.assign(name);
+        return checked;
     }
 
     // un Block es exactamente un scope: se abre un frame al entrar y se cierra al

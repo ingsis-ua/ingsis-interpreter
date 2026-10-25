@@ -1,5 +1,6 @@
 package org.printscript.semantic;
 
+import java.util.Optional;
 import org.printscript.ast.BinaryExpression;
 import org.printscript.ast.BooleanLiteral;
 import org.printscript.ast.Expression;
@@ -65,14 +66,15 @@ final class ExpressionTyper extends ExpressionOnlyVisitor<Result<Type>> {
 
     @Override
     public Result<Type> visitIdentifier(Identifier identifier) {
-        return symbols.read(identifier.name())
-                .map(Symbol::type)
-                .<Result<Type>>map(Success::new)
-                .orElseGet(
-                        () ->
-                                new Failure<>(
-                                        "Variable no declarada: " + identifier.name(),
-                                        identifier.range()));
+        String name = identifier.name();
+        Optional<Symbol> symbol = symbols.read(name);
+        if (symbol.isEmpty()) {
+            return new Failure<>("Variable no declarada: " + name, identifier.range());
+        }
+        if (!symbols.isInitialized(name)) {
+            return new Failure<>("Variable usada antes de asignarse: " + name, identifier.range());
+        }
+        return new Success<>(symbol.get().type());
     }
 
     @Override

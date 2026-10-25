@@ -245,7 +245,7 @@ El invariante del módulo: **compone, no decide**. No tiene ni una regla del len
 
 **Trade-off asumido.** Como la ejecución es en una sola pasada, cuando aparece un error las sentencias válidas anteriores ya se ejecutaron y su salida ya salió. Quien necesite atomicidad corre primero la validación.
 
-**Comportamiento anotado: imprimir una variable declarada sin valor.** Hoy el valor guardado para una declaración sin inicializador es `null`, y `asText` lo convierte con `String.valueOf`, así que `println` imprime `null`. No es lo que debería pasar en un lenguaje con chequeo de tipos, y `semantic` tampoco lo detecta: hoy acepta una declaración sin inicializador y no marca el uso posterior de esa variable. Queda anotado como pendiente de una regla de "usada antes de asignarse".
+**Una variable declarada sin valor no se puede usar hasta que se le asigne uno.** `semantic` lleva, junto a la tabla de tipos, una marca de "asignada" por scope: `let x: number;` la deja en falso y una asignación la pone en verdadero en el scope donde ocurre. Usar `x` antes da `Variable usada antes de asignarse: x` con el rango del uso, sin ejecutar nada. La regla es conservadora a propósito: una asignación dentro de un bloque vale dentro de ese bloque y no afuera, así que `if (c) { x = 1; }` seguido de `println(x);` es error aunque todas las ramas asignaran. Se eligió así porque se explica en una frase y nunca deja pasar un `null`; contar las ramas exigiría cruzar las tablas de cada una. Una declaración con un inicializador mal tipado cuenta como asignada, para que un error no arrastre a los usos que siguen.
 
 ---
 

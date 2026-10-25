@@ -7,28 +7,48 @@ import org.printscript.common.ScopedValues;
 public final class SymbolTable {
 
     private final ScopedValues<Symbol> symbols;
+    private final ScopedValues<Boolean> assigned;
 
     public SymbolTable() {
-        this(new ScopedValues<>());
+        this(new ScopedValues<>(), new ScopedValues<>());
     }
 
-    private SymbolTable(ScopedValues<Symbol> symbols) {
+    private SymbolTable(ScopedValues<Symbol> symbols, ScopedValues<Boolean> assigned) {
         this.symbols = symbols;
+        this.assigned = assigned;
     }
 
     public SymbolTable openScope() {
-        return new SymbolTable(symbols.openScope());
+        return new SymbolTable(symbols.openScope(), assigned.openScope());
     }
 
     public SymbolTable closeScope() {
-        return new SymbolTable(symbols.closeScope());
+        return new SymbolTable(symbols.closeScope(), assigned.closeScope());
     }
 
     public Optional<SymbolTable> declare(String name, Symbol symbol) {
-        return symbols.declare(name, symbol).map(SymbolTable::new);
+        return declare(name, symbol, true);
+    }
+
+    public Optional<SymbolTable> declare(String name, Symbol symbol, boolean initialized) {
+        return symbols.declare(name, symbol)
+                .map(declared -> new SymbolTable(declared, markHere(name, initialized)));
+    }
+
+    public SymbolTable assign(String name) {
+        return new SymbolTable(symbols, markHere(name, true));
     }
 
     public Optional<Symbol> read(String name) {
         return symbols.read(name);
+    }
+
+    public boolean isInitialized(String name) {
+        return assigned.read(name).orElse(true);
+    }
+
+    private ScopedValues<Boolean> markHere(String name, boolean value) {
+        return assigned.declare(name, value)
+                .orElseGet(() -> assigned.replace(name, value).orElseThrow());
     }
 }
