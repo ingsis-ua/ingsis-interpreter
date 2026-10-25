@@ -104,9 +104,15 @@ spotless {
     // Es poco, pero es lo que evita los diffs sucios en los archivos que más
     // se editan a mano.
     format("textos") {
-        target("**/*.md", "**/*.yml", "**/*.yaml")
+        target("**/*.yml", "**/*.yaml")
         targetExclude("**/build/**", "**/.gradle/**")
         trimTrailingWhitespace()
+        endWithNewline()
+    }
+
+    format("markdown") {
+        target("**/*.md")
+        targetExclude("**/build/**", "**/.gradle/**")
         endWithNewline()
     }
 }
