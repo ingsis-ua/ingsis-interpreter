@@ -18,6 +18,7 @@ import org.printscript.ast.ReadEnv;
 import org.printscript.ast.ReadInput;
 import org.printscript.ast.Statement;
 import org.printscript.ast.StringLiteral;
+import org.printscript.ast.UnaryExpression;
 import org.printscript.ast.VariableDeclaration;
 
 // junta todos los readInput de una sentencia.
@@ -31,6 +32,11 @@ public final class ReadInputCollector implements ASTVisitor<List<ReadInput>> {
     @Override
     public List<ReadInput> visitBinaryExpression(BinaryExpression binaryExpression) {
         return join(binaryExpression.left().accept(this), binaryExpression.right().accept(this));
+    }
+
+    @Override
+    public List<ReadInput> visitUnaryExpression(UnaryExpression unaryExpression) {
+        return unaryExpression.operand().accept(this);
     }
 
     @Override

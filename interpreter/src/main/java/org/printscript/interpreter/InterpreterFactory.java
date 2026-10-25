@@ -16,6 +16,7 @@ import org.printscript.ast.ReadEnv;
 import org.printscript.ast.ReadInput;
 import org.printscript.ast.Statement;
 import org.printscript.ast.StringLiteral;
+import org.printscript.ast.UnaryExpression;
 import org.printscript.ast.VariableDeclaration;
 import org.printscript.common.Result;
 import org.printscript.common.Version;
@@ -47,7 +48,8 @@ public final class InterpreterFactory {
                         NumberLiteral.class,
                         StringLiteral.class,
                         Identifier.class,
-                        BinaryExpression.class);
+                        BinaryExpression.class,
+                        UnaryExpression.class);
         return switch (version) {
             case V10 -> common;
             case V11 ->

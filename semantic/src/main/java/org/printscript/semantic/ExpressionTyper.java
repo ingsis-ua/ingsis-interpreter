@@ -11,6 +11,7 @@ import org.printscript.ast.Operator;
 import org.printscript.ast.ReadEnv;
 import org.printscript.ast.ReadInput;
 import org.printscript.ast.StringLiteral;
+import org.printscript.ast.UnaryExpression;
 import org.printscript.common.Failure;
 import org.printscript.common.Range;
 import org.printscript.common.Result;
@@ -75,6 +76,23 @@ final class ExpressionTyper extends ExpressionOnlyVisitor<Result<Type>> {
             return new Failure<>("Variable usada antes de asignarse: " + name, identifier.range());
         }
         return new Success<>(symbol.get().type());
+    }
+
+    @Override
+    public Result<Type> visitUnaryExpression(UnaryExpression unaryExpression) {
+        return unaryExpression
+                .operand()
+                .accept(this)
+                .andThen(
+                        type ->
+                                type == Type.NUMBER
+                                        ? new Success<>(Type.NUMBER)
+                                        : new Failure<>(
+                                                "No se puede aplicar "
+                                                        + unaryExpression.operator()
+                                                        + " a "
+                                                        + type.writtenName(),
+                                                unaryExpression.range()));
     }
 
     @Override

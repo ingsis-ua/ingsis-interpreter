@@ -16,6 +16,7 @@ import org.printscript.ast.PrintlnStatement;
 import org.printscript.ast.ReadEnv;
 import org.printscript.ast.ReadInput;
 import org.printscript.ast.StringLiteral;
+import org.printscript.ast.UnaryExpression;
 import org.printscript.ast.VariableDeclaration;
 
 // todos los identifiers
@@ -44,6 +45,11 @@ public final class IdentifierCollector implements ASTVisitor<List<Identifier>> {
     @Override
     public List<Identifier> visitBinaryExpression(BinaryExpression binaryExpression) {
         return join(in(binaryExpression.left()), in(binaryExpression.right()));
+    }
+
+    @Override
+    public List<Identifier> visitUnaryExpression(UnaryExpression unaryExpression) {
+        return in(unaryExpression.operand());
     }
 
     @Override

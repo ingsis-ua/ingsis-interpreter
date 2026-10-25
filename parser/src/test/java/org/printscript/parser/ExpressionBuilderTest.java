@@ -11,6 +11,7 @@ import org.printscript.ast.Identifier;
 import org.printscript.ast.NumberLiteral;
 import org.printscript.ast.Operator;
 import org.printscript.ast.StringLiteral;
+import org.printscript.ast.UnaryExpression;
 import org.printscript.common.Failure;
 import org.printscript.common.Position;
 import org.printscript.common.Range;
@@ -50,6 +51,79 @@ class ExpressionBuilderTest {
 
     private static TokenBuffer bufferOf(Token... tokens) {
         return new TokenBuffer(new ListTokenIterator(List.of(tokens)));
+    }
+
+    @Test
+    void aMinusInOperandPositionNegatesTheOperand() {
+        Result<Expression> result =
+                builder.build(bufferOf(operator("-", 1), number("5", 2)), range(1, 1));
+
+        assertEquals(
+                new Success<>(
+                        new UnaryExpression(
+                                Operator.MINUS, new NumberLiteral(5, range(2, 2)), range(1, 2))),
+                result);
+    }
+
+    @Test
+    void theNegationBindsTighterThanMultiplication() {
+        Result<Expression> result =
+                builder.build(
+                        bufferOf(
+                                operator("-", 1), number("2", 2), operator("*", 4), number("3", 6)),
+                        range(1, 1));
+
+        BinaryExpression product =
+                assertInstanceOf(BinaryExpression.class, ((Success<Expression>) result).value());
+        assertEquals(Operator.MULTIPLY, product.operator());
+        assertInstanceOf(UnaryExpression.class, product.left());
+    }
+
+    @Test
+    void aNegationCanFollowABinaryOperator() {
+        Result<Expression> result =
+                builder.build(
+                        bufferOf(
+                                number("2", 1), operator("*", 3), operator("-", 5), number("3", 6)),
+                        range(1, 1));
+
+        BinaryExpression product =
+                assertInstanceOf(BinaryExpression.class, ((Success<Expression>) result).value());
+        assertEquals(
+                new UnaryExpression(Operator.MINUS, new NumberLiteral(3, range(6, 6)), range(5, 6)),
+                product.right());
+    }
+
+    @Test
+    void negationsNestAndApplyToGroups() {
+        Result<Expression> doubled =
+                builder.build(
+                        bufferOf(operator("-", 1), operator("-", 3), number("1", 4)), range(1, 1));
+        Result<Expression> grouped =
+                builder.build(
+                        bufferOf(
+                                operator("-", 1),
+                                punctuation("(", 2),
+                                number("1", 3),
+                                operator("+", 5),
+                                number("2", 7),
+                                punctuation(")", 8)),
+                        range(1, 1));
+
+        UnaryExpression outer =
+                assertInstanceOf(UnaryExpression.class, ((Success<Expression>) doubled).value());
+        assertInstanceOf(UnaryExpression.class, outer.operand());
+        UnaryExpression negatedGroup =
+                assertInstanceOf(UnaryExpression.class, ((Success<Expression>) grouped).value());
+        assertInstanceOf(BinaryExpression.class, negatedGroup.operand());
+        assertEquals(range(1, 8), negatedGroup.range());
+    }
+
+    @Test
+    void aMinusWithoutOperandFailsAtTheMinus() {
+        Result<Expression> result = builder.build(bufferOf(operator("-", 1)), range(1, 1));
+
+        assertEquals(range(1, 1), assertInstanceOf(Failure.class, result).range());
     }
 
     @Test
