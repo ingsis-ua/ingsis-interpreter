@@ -241,7 +241,7 @@ Es el único lugar del sistema donde el lexer y el parser se conocen entre sí. 
 
 El invariante del módulo: **compone, no decide**. No tiene ni una regla del lenguaje; todo el conocimiento del lenguaje sigue en las factories.
 
-**La política con los errores es acumular, no cortar.** Las etapas deliberadamente no la toman, así que la decisión vive acá: la fachada junta los `Failure` que salen del bucle — con su mensaje y su `Range` — y los devuelve como lista al terminar. Un error no detiene la ejecución del resto del programa.
+**La política con los errores es acumular, no cortar.** Las etapas deliberadamente no la toman, así que la decisión vive acá: la fachada junta los `Failure` que salen del bucle — con su mensaje y su `Range` — y los devuelve como lista al terminar. Un error no detiene la ejecución del resto del programa. Adentro de un bloque la regla depende de la etapa. `semantic` revisa todas las sentencias del bloque y reporta cada falla con su rango (`StatementChecker.failuresOf`), así que `validate` muestra todos los errores de un `if` y no solo el primero. El parser, en cambio, corta en el primer error de sintaxis del bloque: recuperarse adentro exigiría sincronizar en el siguiente `;` a la misma profundidad, y un error de sintaxis suele invalidar lo que sigue. El `Executor` también corta en el primer error de ejecución del bloque, porque ejecutar las sentencias que siguen a una que falló dejaría el programa en un estado que nadie escribió.
 
 **Trade-off asumido.** Como la ejecución es en una sola pasada, cuando aparece un error las sentencias válidas anteriores ya se ejecutaron y su salida ya salió. Quien necesite atomicidad corre primero la validación.
 
