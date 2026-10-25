@@ -83,4 +83,17 @@ class LexerTest {
         assertTrue(lexer.hasNext());
         assertEquals(2, lines.requestedCount());
     }
+
+    @Test
+    void aByteOrderMarkAtTheStartIsIgnoredAndColumnsStartAfterIt() {
+        Lexer lexer =
+                LexerFactory.create(
+                        List.of("\uFEFFprintln(1);").iterator(),
+                        org.printscript.common.Version.V10);
+
+        Token first = lexer.next();
+
+        assertEquals("println", first.value());
+        assertEquals(new Range(new Position(1, 1), new Position(1, 7)), first.range());
+    }
 }

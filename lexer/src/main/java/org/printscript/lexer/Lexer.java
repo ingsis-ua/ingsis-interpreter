@@ -14,6 +14,8 @@ import org.printscript.token.TokenType;
 @SuppressWarnings("PMD.NullAssignment")
 public final class Lexer implements Iterator<Token> {
 
+    private static final String BYTE_ORDER_MARK = "\uFEFF";
+
     private final Iterator<String> lines;
     private final List<TokenConstructor> constructors;
     private String currentLine;
@@ -61,6 +63,9 @@ public final class Lexer implements Iterator<Token> {
                 }
                 currentLine = lines.next();
                 lineNumber = lineNumber + 1;
+                if (lineNumber == 1 && currentLine.startsWith(BYTE_ORDER_MARK)) {
+                    currentLine = currentLine.substring(BYTE_ORDER_MARK.length());
+                }
                 columnIndex = 0;
                 continue;
             }

@@ -1,5 +1,6 @@
 package org.printscript.linter;
 
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -10,6 +11,10 @@ import org.printscript.linter.rules.LintRule;
 
 // por cada sentencia, corre todas las reglas y junta lo que reportan.
 public final class Linter implements Iterator<Result<List<Violation>>> {
+
+    private static final Comparator<Violation> SOURCE_ORDER =
+            Comparator.<Violation>comparingInt(violation -> violation.range().start().line())
+                    .thenComparingInt(violation -> violation.range().start().column());
 
     private final List<LintRule> rules;
     private final Iterator<Result<List<Violation>>> checked;
@@ -31,6 +36,9 @@ public final class Linter implements Iterator<Result<List<Violation>>> {
     }
 
     private List<Violation> check(Statement statement) {
-        return rules.stream().flatMap(rule -> rule.check(statement).stream()).toList();
+        return rules.stream()
+                .flatMap(rule -> rule.check(statement).stream())
+                .sorted(SOURCE_ORDER)
+                .toList();
     }
 }
