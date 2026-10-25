@@ -99,7 +99,7 @@ public final class ExpressionBuilder {
     private Result<Expression> parsePrimary(TokenBuffer tokens, Range anchor) {
         Optional<Token> next = tokens.lookahead(0);
         if (next.isEmpty()) {
-            return new Failure<>("Missing operand", anchor);
+            return new Failure<>("Falta un operando", anchor);
         }
         Token token = next.get();
         return switch (token.type()) {
@@ -170,7 +170,7 @@ public final class ExpressionBuilder {
         return Tokens.expect(
                 tokens,
                 token -> Tokens.isPunctuation(token, "("),
-                "Expected '(' after '" + keyword.value() + "'",
+                "Falta '(' después de '" + keyword.value() + "'",
                 keyword.range());
     }
 
@@ -179,7 +179,7 @@ public final class ExpressionBuilder {
         return Tokens.expect(
                 tokens,
                 token -> Tokens.isPunctuation(token, ")"),
-                "Expected ')' after the argument of '" + keyword.value() + "'",
+                "Falta ')' después del argumento de '" + keyword.value() + "'",
                 argument.range());
     }
 
@@ -196,10 +196,10 @@ public final class ExpressionBuilder {
         }
         Optional<Token> close = tokens.lookahead(0);
         if (close.isEmpty()) {
-            return new Failure<>("Unclosed parenthesis", openParenthesis.range());
+            return new Failure<>("Paréntesis sin cerrar", openParenthesis.range());
         }
         if (close.get().type() != TokenType.PUNCTUATION || !")".equals(close.get().value())) {
-            return new Failure<>("Expected ')'", close.get().range());
+            return new Failure<>("Falta ')'", close.get().range());
         }
         tokens.commit(1);
         Range grouped = new Range(openParenthesis.range().start(), close.get().range().end());
@@ -226,12 +226,12 @@ public final class ExpressionBuilder {
             return new Success<>(
                     new NumberLiteral(Double.parseDouble(token.value()), token.range()));
         } catch (NumberFormatException e) {
-            return new Failure<>("Invalid number literal '" + token.value() + "'", token.range());
+            return new Failure<>("Número inválido '" + token.value() + "'", token.range());
         }
     }
 
     private static Result<Expression> unexpectedToken(Token token) {
         return new Failure<>(
-                "Unexpected token '" + token.value() + "' in operand position", token.range());
+                "Se esperaba un valor y apareció '" + token.value() + "'", token.range());
     }
 }

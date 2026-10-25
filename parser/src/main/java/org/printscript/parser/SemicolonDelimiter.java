@@ -17,6 +17,6 @@ public final class SemicolonDelimiter implements StatementDelimiter {
 
     @Override
     public String unterminatedMessage(List<Token> accumulated) {
-        return "Expected ';' before the end of the stream";
+        return "Falta ';' antes del final del archivo";
     }
 }

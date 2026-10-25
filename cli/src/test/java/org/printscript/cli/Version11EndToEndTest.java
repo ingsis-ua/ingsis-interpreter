@@ -132,7 +132,7 @@ class Version11EndToEndTest {
         Output before = shell(dir, "execution programa.ps\nexit\n");
         Output after = shell(dir, "version 1.1\nexecution programa.ps\nexit\n");
 
-        assertTrue(before.err().contains("Expected"), before.err());
+        assertTrue(before.err().contains("error:"), before.err());
         assertTrue(after.out().contains("hola"), after.out());
     }
 

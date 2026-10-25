@@ -62,7 +62,7 @@ public final class DeclarationParser implements StatementParser {
         return Tokens.expect(
                 tokens,
                 token -> token.type() == TokenType.IDENTIFIER,
-                "Expected an identifier after '" + declarator.value() + "'",
+                "Falta el nombre de la variable después de '" + declarator.value() + "'",
                 declarator.range());
     }
 
@@ -70,7 +70,7 @@ public final class DeclarationParser implements StatementParser {
         return Tokens.expect(
                 tokens,
                 token -> Tokens.isPunctuation(token, ":"),
-                "Expected ':' after the variable name",
+                "Falta ':' después del nombre de la variable",
                 name.range());
     }
 
@@ -78,7 +78,7 @@ public final class DeclarationParser implements StatementParser {
         return Tokens.expect(
                 tokens,
                 token -> token.type() == TokenType.KEYWORD || token.type() == TokenType.IDENTIFIER,
-                "Expected a type annotation after ':'",
+                "Falta el tipo después de ':'",
                 colon.range());
     }
 
@@ -99,7 +99,7 @@ public final class DeclarationParser implements StatementParser {
         return Tokens.expect(
                 tokens,
                 token -> Tokens.isPunctuation(token, ";"),
-                "Expected ';' at the end of the declaration",
+                "Falta ';' al final de la declaración",
                 parts.beforeSemicolon());
     }
 

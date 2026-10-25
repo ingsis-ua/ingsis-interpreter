@@ -40,6 +40,15 @@ final class Tokens {
         return new Success<>(candidate);
     }
 
+    static String unreadable(Token token) {
+        String text = token.value();
+        boolean unclosedString =
+                text.length() > 1 && (text.startsWith("\"") || text.startsWith("'"));
+        return unclosedString
+                ? "String sin cerrar: " + text
+                : "Símbolo no reconocido: '" + text + "'";
+    }
+
     static <T> Failure<T> forward(Failure<?> failure) {
         return new Failure<>(failure.message(), failure.range());
     }

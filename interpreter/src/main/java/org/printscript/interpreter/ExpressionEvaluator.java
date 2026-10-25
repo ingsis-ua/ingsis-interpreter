@@ -83,11 +83,22 @@ public final class ExpressionEvaluator extends ExpressionOnlyVisitor<Result<Obje
                                         readEnv.range()));
     }
 
+    private static Result<Object> valueOf(Identifier identifier, Variable variable) {
+        if (variable.value() == FailedDeclaration.INSTANCE) {
+            return new Failure<>(
+                    "La variable "
+                            + identifier.name()
+                            + " no tiene valor porque su declaración falló",
+                    identifier.range());
+        }
+        return new Success<>(variable.value());
+    }
+
     @Override
     public Result<Object> visitIdentifier(Identifier identifier) {
         return environment
                 .read(identifier.name())
-                .<Result<Object>>map(variable -> new Success<>(variable.value()))
+                .<Result<Object>>map(variable -> valueOf(identifier, variable))
                 .orElseGet(
                         () ->
                                 new Failure<>(
@@ -108,7 +119,7 @@ public final class ExpressionEvaluator extends ExpressionOnlyVisitor<Result<Obje
             return new Success<>(-number);
         }
         return new Failure<>(
-                "No se puede aplicar " + expression.operator() + " a " + typeOf(value),
+                "No se puede aplicar " + expression.operator().symbol() + " a " + typeOf(value),
                 expression.range());
     }
 
@@ -145,7 +156,7 @@ public final class ExpressionEvaluator extends ExpressionOnlyVisitor<Result<Obje
         }
         return new Failure<>(
                 "No se puede aplicar "
-                        + operator
+                        + operator.symbol()
                         + " entre "
                         + typeOf(left)
                         + " y "

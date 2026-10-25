@@ -129,7 +129,7 @@ class ExpressionEvaluatorTest {
         Failure<Object> failure = evaluateFailing(invalid, new Environment());
 
         assertEquals(range, failure.range());
-        assertTrue(failure.message().contains("MINUS"), failure.message());
+        assertTrue(failure.message().contains("aplicar -"), failure.message());
         assertTrue(failure.message().contains("string"), failure.message());
     }
 }

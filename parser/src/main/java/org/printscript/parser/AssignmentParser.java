@@ -47,7 +47,7 @@ public final class AssignmentParser implements StatementParser {
         return Tokens.expect(
                 tokens,
                 token -> Tokens.isOperator(token, "="),
-                "Expected '=' after the variable name",
+                "Falta '=' después del nombre de la variable",
                 name.range());
     }
 
@@ -55,7 +55,7 @@ public final class AssignmentParser implements StatementParser {
         return Tokens.expect(
                 tokens,
                 token -> Tokens.isPunctuation(token, ";"),
-                "Expected ';' at the end of the assignment",
+                "Falta ';' al final de la asignación",
                 expression.range());
     }
 

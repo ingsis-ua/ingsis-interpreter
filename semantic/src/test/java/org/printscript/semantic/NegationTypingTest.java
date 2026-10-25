@@ -28,14 +28,14 @@ class NegationTypingTest {
     @Test
     void negatingAStringIsATypeError() {
         assertEquals(
-                new Failure<Type>("No se puede aplicar MINUS a string", at(1, 1)),
+                new Failure<Type>("No se puede aplicar - a string", at(1, 1)),
                 ExpressionTyper.typeOf(negate(text("hola", Ast.ANY)), new SymbolTable()));
     }
 
     @Test
     void negatingABooleanIsATypeError() {
         assertEquals(
-                new Failure<Type>("No se puede aplicar MINUS a boolean", at(1, 1)),
+                new Failure<Type>("No se puede aplicar - a boolean", at(1, 1)),
                 ExpressionTyper.typeOf(negate(Ast.bool(true, Ast.ANY)), new SymbolTable()));
     }
 }

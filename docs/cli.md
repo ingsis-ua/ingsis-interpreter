@@ -47,7 +47,7 @@ saludo.ps
 printscript:programas> exec saludo.ps
 Hola, Tute
 printscript:programas> validate roto.ps
-error: Expected ':' after the variable name (línea 1, columna 7 a línea 1, columna 12)
+error: Falta ':' después del nombre de la variable (línea 1, columna 7 a línea 1, columna 12)
 printscript:programas> exit
 ```
 
@@ -239,7 +239,7 @@ println("despues");
 ```bash
 $ printscript execution syntax-error-missing-colon.ps
 despues
-error: Expected ':' after the variable name (línea 1, columna 7 a línea 1, columna 12)
+error: Falta ':' después del nombre de la variable (línea 1, columna 7 a línea 1, columna 12)
 $ echo $?
 1
 ```

@@ -150,7 +150,7 @@ class StatementCheckerTest {
 
         Failure<Void> failure = failureOf(declare("x", NUMBER, subtraction));
 
-        assertEquals("No se puede aplicar MINUS entre string y string", failure.message());
+        assertEquals("No se puede aplicar - entre string y string", failure.message());
         assertEquals(Ast.ANY, failure.range());
     }
 
@@ -160,10 +160,10 @@ class StatementCheckerTest {
         Expression product = binary(text(HOLA, Ast.ANY), Operator.MULTIPLY, number(2, Ast.ANY));
 
         assertEquals(
-                "No se puede aplicar DIVIDE entre number y string",
+                "No se puede aplicar / entre number y string",
                 failureOf(declare("x", NUMBER, division)).message());
         assertEquals(
-                "No se puede aplicar MULTIPLY entre string y number",
+                "No se puede aplicar * entre string y number",
                 failureOf(declare("y", NUMBER, product)).message());
     }
 
@@ -265,7 +265,7 @@ class StatementCheckerTest {
     @Test
     void aBooleanDoesNotTakePartInBinaryOperations() {
         assertEquals(
-                "No se puede aplicar PLUS entre boolean y number",
+                "No se puede aplicar + entre boolean y number",
                 failureOf(
                                 declare(
                                         "x",
@@ -276,7 +276,7 @@ class StatementCheckerTest {
                                                 number(1, Ast.ANY))))
                         .message());
         assertEquals(
-                "No se puede aplicar PLUS entre string y boolean",
+                "No se puede aplicar + entre string y boolean",
                 failureOf(
                                 declare(
                                         "y",

@@ -8,9 +8,12 @@ import java.util.Objects;
 import java.util.Optional;
 import org.printscript.ast.Statement;
 import org.printscript.common.Failure;
+import org.printscript.common.Position;
+import org.printscript.common.Range;
 import org.printscript.common.Result;
 import org.printscript.common.Success;
 import org.printscript.token.Token;
+import org.printscript.token.TokenType;
 
 // pieza principal del módulo
 // entrega una sentencia por vez, como el lexer entrega un token por vez
@@ -27,7 +30,7 @@ public final class Parser implements Iterator<Result<Statement>> {
         this.buffer = Objects.requireNonNull(buffer, "buffer");
         this.statementParsers = List.copyOf(statementParsers);
         if (this.statementParsers.isEmpty()) {
-            throw new IllegalArgumentException("At least one statement parser is required");
+            throw new IllegalArgumentException("Hace falta al menos un parser de sentencias");
         }
         this.delimiter = Objects.requireNonNull(delimiter, "delimiter");
     }
@@ -74,12 +77,32 @@ public final class Parser implements Iterator<Result<Statement>> {
 
     // la sentencia ya está acotada: la arma el primer parser que la reconozca
     private Result<Statement> parseStatement(List<Token> statement) {
+        Result<Statement> parsed = dispatch(statement);
+        Optional<Token> unreadable =
+                statement.stream().filter(token -> token.type() == TokenType.UNKNOWN).findFirst();
+        if (unreadable.isPresent()
+                && parsed instanceof Failure<Statement> failure
+                && !startsBefore(failure.range(), unreadable.get().range())) {
+            return new Failure<>(Tokens.unreadable(unreadable.get()), unreadable.get().range());
+        }
+        return parsed;
+    }
+
+    private static boolean startsBefore(Range first, Range second) {
+        Position a = first.start();
+        Position b = second.start();
+        return a.line() < b.line() || a.line() == b.line() && a.column() < b.column();
+    }
+
+    private Result<Statement> dispatch(List<Token> statement) {
         TokenBuffer statementTokens = new TokenBuffer(new ListTokenIterator(statement));
         for (StatementParser parser : statementParsers) {
             if (parser.matches(statementTokens)) {
                 return parser.parse(statementTokens);
             }
         }
-        return new Failure<>("Unrecognized statement", statement.getFirst().range());
+        return new Failure<>(
+                "Sentencia no reconocida",
+                new Range(statement.getFirst().range().start(), statement.getLast().range().end()));
     }
 }
