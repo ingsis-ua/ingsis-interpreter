@@ -58,9 +58,9 @@ class BooleanEndToEndTest {
     }
 
     @Test
-    void aBooleanDoesNotTakePartInArithmeticOrConcatenation() {
+    void aBooleanDoesNotTakePartInArithmeticButConcatenatesWithAString() {
         assertEquals(1, validate(Version.V11, "let x: number = true + 1;").size());
-        assertEquals(1, validate(Version.V11, "let x: string = \"n: \" + true;").size());
+        assertEquals(0, validate(Version.V11, "let x: string = \"n: \" + true;").size());
         assertEquals(1, validate(Version.V11, "let x: number = true - false;").size());
     }
 
