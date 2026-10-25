@@ -52,10 +52,22 @@ tasks.register<JavaExec>("cpdCheck") {
     mainClass.set("net.sourceforge.pmd.cli.PmdCli")
     args("cpd", "--minimum-tokens", "50", "--language", "java")
     subprojects.forEach { args("--dir", "${it.name}/src/main/java") }
+    isIgnoreExitValue = true
     doFirst {
         val archivo = reporte.get().asFile
         archivo.parentFile.mkdirs()
         standardOutput = archivo.outputStream()
+    }
+    doLast {
+        val salida = executionResult.get().exitValue
+        val archivo = reporte.get().asFile
+        if (salida == 4) {
+            throw GradleException(
+                "CPD encontró código duplicado (reporte en ${archivo.relativeTo(rootDir)}):\n\n" +
+                    archivo.readText(),
+            )
+        }
+        executionResult.get().assertNormalExitValue()
     }
 }
 
@@ -72,6 +84,12 @@ tasks.register<Exec>("installGitHooks") {
 
 // formatea kotlinGradle y format("textos")
 spotless {
+    java {
+        target("tck/implementation/*.java")
+        googleJavaFormat("1.27.0").aosp()
+        removeUnusedImports()
+    }
+
     kotlinGradle {
         target(
             "*.gradle.kts",

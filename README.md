@@ -102,11 +102,11 @@ tests.** Antes de agregar una regla, esa división dice dónde va.
 
 | Herramienta | Qué hace | Sobre qué | Dónde se configura | Cuando falla |
 |---|---|---|---|---|
-| Spotless + google-java-format (AOSP) | escribe el formato del código | `src/**/*.java` | en ningún lado: el formateador no es configurable a propósito | `./gradlew spotlessApply` |
+| Spotless + google-java-format (AOSP) | escribe el formato del código | `src/**/*.java` y el adapter del TCK (`tck/implementation`) | en ningún lado: el formateador no es configurable a propósito | `./gradlew spotlessApply` |
 | ktlint (vía Spotless) | formatea los archivos de build y de texto | `*.gradle.kts`, `*.md`, `*.yml` | `.editorconfig` | `./gradlew spotlessApply` |
 | Checkstyle | nombres y errores probables | `src/main` y `src/test` | `config/checkstyle/checkstyle.xml` | leer el reporte en `<modulo>/build/reports/checkstyle` y arreglar a mano |
 | PMD | malas prácticas y complejidad | `src/main` y `src/test` | `config/pmd/ruleset.xml` | leer el reporte en `<modulo>/build/reports/pmd`, arreglar o justificar la supresión |
-| CPD | código duplicado | `src/main` de los trece módulos | tarea `cpdCheck` del `build.gradle.kts` raíz, umbral de 50 tokens | leer `build/reports/cpd/cpd.txt` y extraer lo repetido |
+| CPD | código duplicado | `src/main` de los trece módulos | tarea `cpdCheck` del `build.gradle.kts` raíz, umbral de 50 tokens | la consola muestra los fragmentos repetidos (también quedan en `build/reports/cpd/cpd.txt`): extraer lo repetido |
 | JaCoCo | cobertura de los tests, con piso | cada módulo por separado | convention plugin `printscript.quality` | escribir el test que falta |
 
 La cobertura es un **piso, nunca un objetivo**: mide qué instrucciones de Java se ejecutaron, no si se
@@ -293,7 +293,7 @@ declaración.
 
 ## Integración continua
 
-Cada push y cada pull request dispara el workflow de
+Cada pull request y cada push a `master`/`main` disparan el workflow de
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml), que corre `./gradlew build`
 con toda la cadena de calidad y publica como artifacts los reportes de test,
 Checkstyle, PMD, CPD y cobertura (por módulo y agregada), también cuando el build
