@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.printscript.ast.Identifier;
 import org.printscript.ast.NumberLiteral;
 import org.printscript.ast.PrintlnStatement;
+import org.printscript.ast.ReadEnv;
 import org.printscript.ast.Statement;
 import org.printscript.ast.StringLiteral;
 import org.printscript.ast.TypeName;
@@ -23,6 +24,7 @@ import org.printscript.common.Position;
 import org.printscript.common.Range;
 import org.printscript.common.Result;
 import org.printscript.common.Success;
+import org.printscript.common.Version;
 import org.printscript.runtime.OutputPrinter;
 
 class InterpreterNodeGateTest {
@@ -75,7 +77,11 @@ class InterpreterNodeGateTest {
         return new Interpreter(
                 new ResultStream(results),
                 new Executor(new Environment(), Ports.of(printer)),
-                Set.of(PrintlnStatement.class));
+                Set.of(
+                        PrintlnStatement.class,
+                        StringLiteral.class,
+                        NumberLiteral.class,
+                        Identifier.class));
     }
 
     @Test
@@ -105,6 +111,29 @@ class InterpreterNodeGateTest {
         assertTrue(failure.message().contains("PrintScript"), failure.message());
         assertInstanceOf(Failure.class, second, String.valueOf(second));
         assertEquals(List.of(), printer.lines);
+    }
+
+    @Test
+    void anExpressionOfALaterVersionInsideASupportedStatementIsRejected() {
+        Range range = new Range(new Position(2, 1), new Position(2, 30));
+        Statement declaration =
+                new VariableDeclaration(
+                        new Identifier("home", ANY),
+                        new TypeName("string", ANY),
+                        Optional.of(new ReadEnv(new StringLiteral("HOME", ANY), range)),
+                        ANY);
+        InMemoryPrinter printer = new InMemoryPrinter();
+        Interpreter interpreter =
+                InterpreterFactory.create(
+                        new ResultStream(List.of(new Success<>(declaration))),
+                        Ports.of(printer),
+                        Version.V10);
+
+        Result<?> result = interpreter.next();
+
+        Failure<?> failure = assertInstanceOf(Failure.class, result, String.valueOf(result));
+        assertEquals(range, failure.range());
+        assertTrue(failure.message().contains("ReadEnv"), failure.message());
     }
 
     @Test
