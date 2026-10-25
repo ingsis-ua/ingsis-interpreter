@@ -149,6 +149,9 @@ public final class ExpressionEvaluator extends ExpressionOnlyVisitor<Result<Obje
     private static Result<Object> combine(
             Object left, Operator operator, Object right, Range range) {
         if (left instanceof Double leftNumber && right instanceof Double rightNumber) {
+            if (operator == Operator.DIVIDE && rightNumber == 0) {
+                return new Failure<>("División por cero", range);
+            }
             return new Success<>(arithmetic(leftNumber, operator, rightNumber));
         }
         if (operator == Operator.PLUS && (left instanceof String || right instanceof String)) {
