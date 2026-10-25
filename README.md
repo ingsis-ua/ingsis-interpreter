@@ -159,6 +159,13 @@ cobertura, PMD y CPD quedan afuera a propósito: son lo lento, y de eso se encar
 sin hacerte esperar. Para un caso legítimo (un commit de emergencia, un WIP en una rama
 propia) existe `git commit --no-verify`; la red que no se puede saltear es el CI.
 
+El hook revisa **lo que vas a commitear**, no lo que tenés en disco: antes de correr
+Gradle guarda aparte los cambios sin stagear y los archivos sin seguimiento, y al
+terminar los devuelve tal como estaban, también si el chequeo falla o lo cortás con
+Ctrl-C. Así un archivo bien stageado no se bloquea por un borrador sin agregar, y uno mal
+stageado no pasa porque en disco ya lo arreglaste. `./scripts/test-pre-commit.sh` prueba
+esos casos en un clon descartable.
+
 ### Dos aclaraciones
 
 - Estas herramientas operan sobre **nuestro código Java**. No son el `formatter` ni el

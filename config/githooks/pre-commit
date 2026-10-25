@@ -1,10 +1,38 @@
 #!/bin/sh
 
-if ! ./gradlew -q spotlessCheck checkstyleMain; then
-    echo ""
-    echo "El pre-commit encontró problemas de formato o de estilo."
-    echo "Para el formato: ./gradlew spotlessApply y volver a agregar los archivos."
-    echo "Para Checkstyle: leer el reporte en <modulo>/build/reports/checkstyle y arreglar a mano."
-    echo "Para saltearlo en un caso legítimo: git commit --no-verify"
-    exit 1
-fi
+stashed=""
+
+restore() {
+    if [ -n "$stashed" ]; then
+        git reset --quiet --hard
+        git stash apply --quiet --index "$stashed"
+        ref="$(git stash list --format='%gd %H' | grep " $stashed\$" | cut -d' ' -f1)"
+        [ -n "$ref" ] && git stash drop --quiet "$ref"
+        stashed=""
+    fi
+}
+
+main() {
+    if git diff --cached --quiet; then
+        return 0
+    fi
+
+    if ! git diff --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
+        marker="pre-commit-$$"
+        git stash push --quiet --keep-index --include-untracked -m "$marker"
+        stashed="$(git stash list --format='%H %gs' | grep " $marker\$" | cut -d' ' -f1)"
+    fi
+    trap restore EXIT INT TERM
+
+    if ! ./gradlew -q spotlessCheck checkstyleMain; then
+        echo ""
+        echo "El pre-commit encontró problemas de formato o de estilo en lo que vas a commitear."
+        echo "Para el formato: ./gradlew spotlessApply y volver a agregar los archivos."
+        echo "Para Checkstyle: leer el reporte en <modulo>/build/reports/checkstyle y arreglar a mano."
+        echo "Para saltearlo en un caso legítimo: git commit --no-verify"
+        return 1
+    fi
+}
+
+main
+exit $?
