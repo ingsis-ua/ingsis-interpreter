@@ -1,6 +1,9 @@
 package org.printscript.semantic;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Iterator;
+import java.util.List;
 import org.printscript.ast.Statement;
 import org.printscript.common.Failure;
 import org.printscript.common.Result;
@@ -11,6 +14,7 @@ public final class SemanticAnalyzer implements Iterator<Result<Statement>> {
 
     private final Iterator<Result<Statement>> statements;
     private final StatementChecker checker;
+    private final Deque<Result<Statement>> pending = new ArrayDeque<>();
 
     public SemanticAnalyzer(Iterator<Result<Statement>> statements, StatementChecker checker) {
         this.statements = statements;
@@ -19,20 +23,24 @@ public final class SemanticAnalyzer implements Iterator<Result<Statement>> {
 
     @Override
     public boolean hasNext() {
-        return statements.hasNext();
+        return !pending.isEmpty() || statements.hasNext();
     }
 
     @Override
     public Result<Statement> next() {
+        if (!pending.isEmpty()) {
+            return pending.removeFirst();
+        }
         Result<Statement> result = statements.next();
         // los errores de sintaxis viajan tal cual: no se re-empaquetan ni pierden su rango
         if (!(result instanceof Success<Statement> success)) {
             return result;
         }
-        Result<Void> checked = success.value().accept(checker);
-        if (checked instanceof Failure<Void> failure) {
-            return new Failure<>(failure.message(), failure.range());
+        List<Failure<Void>> failures = checker.failuresOf(success.value());
+        if (failures.isEmpty()) {
+            return result;
         }
-        return result;
+        failures.forEach(failure -> pending.add(new Failure<>(failure.message(), failure.range())));
+        return pending.removeFirst();
     }
 }

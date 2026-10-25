@@ -1,6 +1,8 @@
 package org.printscript.semantic;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.printscript.ast.AssignmentStatement;
@@ -27,6 +29,7 @@ public final class StatementChecker extends StatementOnlyVisitor<Result<Void>> {
 
     private final Set<Type> supportedTypes;
     private final String language;
+    private final List<Failure<Void>> nested = new ArrayList<>();
     private SymbolTable symbols;
 
     public StatementChecker(Set<Type> supportedTypes) {
@@ -122,19 +125,34 @@ public final class StatementChecker extends StatementOnlyVisitor<Result<Void>> {
     // un Block es exactamente un scope: se abre un frame al entrar y se cierra al
     // salir, también cuando una sentencia de adentro falló. Es la misma regla para el
     // then, para el else y para el bloque de un else if, porque los tres son Block.
+    public List<Failure<Void>> failuresOf(Statement statement) {
+        nested.clear();
+        Result<Void> checked = statement.accept(this);
+        if (!nested.isEmpty()) {
+            return List.copyOf(nested);
+        }
+        return checked instanceof Failure<Void> failure ? List.of(failure) : List.of();
+    }
+
     @Override
     public Result<Void> visitBlock(Block block) {
         symbols = symbols.openScope();
+        int before = nested.size();
         try {
             for (Statement statement : block.statements()) {
-                Result<Void> checked = statement.accept(this);
-                if (checked instanceof Failure<Void>) {
-                    return checked;
-                }
+                record(statement);
             }
-            return success();
+            return nested.size() == before ? success() : nested.get(before);
         } finally {
             symbols = symbols.closeScope();
+        }
+    }
+
+    private void record(Statement statement) {
+        int before = nested.size();
+        Result<Void> checked = statement.accept(this);
+        if (checked instanceof Failure<Void> failure && nested.size() == before) {
+            nested.add(failure);
         }
     }
 
@@ -150,13 +168,12 @@ public final class StatementChecker extends StatementOnlyVisitor<Result<Void>> {
                     "La condición de un if tiene que ser boolean", ifStatement.condition().range());
         }
         Result<Void> thenChecked = ifStatement.thenBlock().accept(this);
-        if (thenChecked instanceof Failure<Void>) {
-            return thenChecked;
-        }
-        return ifStatement
-                .elseBranch()
-                .map(branch -> branch.accept(this))
-                .orElseGet(StatementChecker::success);
+        Result<Void> elseChecked =
+                ifStatement
+                        .elseBranch()
+                        .map(branch -> branch.accept(this))
+                        .orElseGet(StatementChecker::success);
+        return thenChecked instanceof Failure<Void> ? thenChecked : elseChecked;
     }
 
     @Override

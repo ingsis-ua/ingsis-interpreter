@@ -208,6 +208,21 @@ class Version11SuiteEndToEndTest {
     // --- lo que Validation tiene que detectar sin ejecutar nada ---
 
     @Test
+    void validationReportsEveryErrorInsideABlock() {
+        List<Failure<?>> failures =
+                validate(
+                        Version.V11,
+                        "if (true) { let a: number = \"x\"; let b: string = 5; println(zzz); }");
+
+        assertEquals(
+                List.of(
+                        "No se puede asignar string a una variable number",
+                        "No se puede asignar number a una variable string",
+                        "Variable no declarada: zzz"),
+                failures.stream().map(Failure::message).toList());
+    }
+
+    @Test
     void aWrongDeclaredTypeIsReportedWithItsPosition() {
         Failure<?> failure = validate(Version.V11, "let x: number = \"hola\";").getFirst();
 
