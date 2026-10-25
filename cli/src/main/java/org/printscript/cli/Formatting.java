@@ -53,12 +53,19 @@ final class Formatting {
             err.println("No se pudo leer '" + sourceFile + "': " + e.getMessage());
             return ExitCode.USAGE_ERROR;
         }
-        Job job = new Job(configuration, version, ending);
+        Job job = new Job(configuration, version, ending, ProgressLine.forTerminal(err));
         return SourceFileProcessor.read(
-                sourceFile, lines -> format(lines, job, outputFile, console, err), err);
+                sourceFile,
+                lines -> format(lines, job, outputFile, console, err),
+                err,
+                job.progress());
     }
 
-    private record Job(FormatterConfiguration configuration, Version version, String ending) {
+    private record Job(
+            FormatterConfiguration configuration,
+            Version version,
+            String ending,
+            ProgressLine progress) {
 
         List<Failure<?>> format(Iterator<String> lines, Writer destination) throws IOException {
             List<Failure<?>> failures =
@@ -94,7 +101,9 @@ final class Formatting {
     private static ExitCode formatToConsole(
             Iterator<String> lines, Job job, PrintStream console, PrintStream err) {
         // No se cierra la consola: el resto del proceso sigue usándola.
-        Writer destination = new OutputStreamWriter(console, StandardCharsets.UTF_8);
+        Writer destination =
+                new ProgressClearingWriter(
+                        new OutputStreamWriter(console, StandardCharsets.UTF_8), job.progress());
         try {
             List<Failure<?>> failures = job.format(lines, destination);
             destination.flush();

@@ -12,19 +12,26 @@ final class ProgressReportingIterator implements Iterator<String> {
 
     private final Iterator<String> delegate;
     private final long totalBytes;
-    private final PrintStream progressOut;
+    private final ProgressLine progress;
     private long consumedBytes;
-    private int lastReportedPercent = -1;
 
     ProgressReportingIterator(Iterator<String> delegate, long totalBytes, PrintStream progressOut) {
+        this(delegate, totalBytes, ProgressLine.enabled(progressOut));
+    }
+
+    ProgressReportingIterator(Iterator<String> delegate, long totalBytes, ProgressLine progress) {
         this.delegate = delegate;
         this.totalBytes = totalBytes;
-        this.progressOut = progressOut;
+        this.progress = progress;
     }
 
     @Override
     public boolean hasNext() {
-        return delegate.hasNext();
+        boolean more = delegate.hasNext();
+        if (!more) {
+            progress.finish();
+        }
+        return more;
     }
 
     @Override
@@ -34,19 +41,8 @@ final class ProgressReportingIterator implements Iterator<String> {
         }
         String line = delegate.next();
         consumedBytes += line.getBytes(StandardCharsets.UTF_8).length + 1;
-        reportProgressIfChanged();
+        progress.show(percentComplete());
         return line;
-    }
-
-    private void reportProgressIfChanged() {
-        int percent = percentComplete();
-        if (percent != lastReportedPercent) {
-            progressOut.print("\rProgreso: " + percent + "%");
-            if (percent >= MAX_PERCENT) {
-                progressOut.println();
-            }
-            lastReportedPercent = percent;
-        }
     }
 
     private int percentComplete() {

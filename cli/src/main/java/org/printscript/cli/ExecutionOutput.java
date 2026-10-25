@@ -29,8 +29,14 @@ final class ExecutionOutput {
             PrintStream err,
             Version version,
             BufferedReader reader) {
+        ProgressLine progress = ProgressLine.forTerminal(err);
         if (outputFile == null) {
-            return execute(sourceFile, new ConsoleOutputPrinter(console), err, version, reader);
+            return execute(
+                    sourceFile,
+                    new ConsoleOutputPrinter(console, progress),
+                    new Streams(err, progress),
+                    version,
+                    reader);
         }
         // se valida el fuente antes de crear el archivo de salida para no dejar un .txt
         // vacío cuando el .ps no existe
@@ -41,8 +47,10 @@ final class ExecutionOutput {
         try (Writer writer = Files.newBufferedWriter(outputFile, StandardCharsets.UTF_8)) {
             OutputPrinter printer =
                     new TeeOutputPrinter(
-                            new ConsoleOutputPrinter(console), new WriterOutputPrinter(writer));
-            ExitCode code = execute(sourceFile, printer, err, version, reader);
+                            new ConsoleOutputPrinter(console, progress),
+                            new WriterOutputPrinter(writer));
+            ExitCode code =
+                    execute(sourceFile, printer, new Streams(err, progress), version, reader);
             err.println("Salida guardada en " + outputFile);
             return code;
         } catch (IOException e) {
@@ -51,10 +59,12 @@ final class ExecutionOutput {
         }
     }
 
+    private record Streams(PrintStream err, ProgressLine progress) {}
+
     private static ExitCode execute(
             Path sourceFile,
             OutputPrinter printer,
-            PrintStream err,
+            Streams streams,
             Version version,
             BufferedReader reader) {
         RuntimePorts ports =
@@ -63,7 +73,10 @@ final class ExecutionOutput {
                         new ConsoleInputProvider(standardInput(reader)),
                         new SystemEnvProvider());
         return SourceFileProcessor.process(
-                sourceFile, lines -> new ExecutionRunner().run(lines, ports, version), err);
+                sourceFile,
+                lines -> new ExecutionRunner().run(lines, ports, version),
+                streams.err(),
+                streams.progress());
     }
 
     private static BufferedReader standardInput(BufferedReader reader) {
