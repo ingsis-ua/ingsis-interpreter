@@ -2,11 +2,13 @@ package org.printscript.config;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class RulesConfigurationTest {
@@ -47,10 +49,23 @@ class RulesConfigurationTest {
     }
 
     @Test
-    void aValueOfTheWrongTypeIsEmpty() {
+    void aValueOfTheWrongTypeFailsNamingTheKeyTheTypeAndTheValue() {
         RulesConfiguration configuration = new RulesConfiguration(Map.of(ENABLED, "si"));
 
-        assertTrue(configuration.getBoolean(ENABLED).isEmpty());
+        IllegalArgumentException thrown =
+                assertThrows(
+                        IllegalArgumentException.class, () -> configuration.getBoolean(ENABLED));
+
+        assertEquals(
+                "La clave '" + ENABLED + "' tiene que ser boolean y vino: si", thrown.getMessage());
+    }
+
+    @Test
+    void theKeysOfTheFileAreAvailable() {
+        RulesConfiguration configuration =
+                new RulesConfiguration(Map.of(ENABLED, true, FORMAT, CAMEL));
+
+        assertEquals(Set.of(ENABLED, FORMAT), configuration.keys());
     }
 
     @Test
@@ -75,6 +90,6 @@ class RulesConfigurationTest {
     void aValueOfAnotherTypeIsNotReadAsAnInteger() {
         RulesConfiguration configuration = new RulesConfiguration(Map.of(BREAKS, CAMEL));
 
-        assertTrue(configuration.getInt(BREAKS).isEmpty());
+        assertThrows(IllegalArgumentException.class, () -> configuration.getInt(BREAKS));
     }
 }

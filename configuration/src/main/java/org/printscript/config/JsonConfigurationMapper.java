@@ -1,6 +1,5 @@
 package org.printscript.config;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,6 +17,6 @@ public final class JsonConfigurationMapper implements ConfigurationMapper {
 
     @Override
     public Map<String, Object> read(InputStream source) throws IOException {
-        return mapper.readValue(source, new TypeReference<Map<String, Object>>() {});
+        return JacksonDocuments.read(mapper, source);
     }
 }

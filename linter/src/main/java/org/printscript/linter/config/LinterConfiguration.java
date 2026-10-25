@@ -1,6 +1,7 @@
 package org.printscript.linter.config;
 
 import java.util.Optional;
+import java.util.Set;
 import org.printscript.config.RulesConfiguration;
 
 // traduce el RulesConfiguration genérico a las 3 reglas con nombre
@@ -13,6 +14,9 @@ public record LinterConfiguration(
     public static final String PRINTLN_ARGUMENT_KEY = "mandatory-variable-or-literal-in-println";
     public static final String READ_INPUT_ARGUMENT_KEY =
             "mandatory-variable-or-literal-in-readInput";
+
+    public static final Set<String> KEYS =
+            Set.of(IDENTIFIER_FORMAT_KEY, PRINTLN_ARGUMENT_KEY, READ_INPUT_ARGUMENT_KEY);
 
     public static LinterConfiguration from(RulesConfiguration rules) {
         return new LinterConfiguration(

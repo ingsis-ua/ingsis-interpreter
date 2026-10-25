@@ -38,7 +38,7 @@ final class Formatting {
         }
         FormatterConfiguration configuration;
         try {
-            configuration = FormatterConfiguration.from(ConfigurationFiles.read(configFile));
+            configuration = FormatterConfiguration.from(ConfigurationFiles.read(configFile, err));
         } catch (IOException | IllegalArgumentException e) {
             err.println("No se pudo leer la configuración: " + e.getMessage());
             return ExitCode.USAGE_ERROR;

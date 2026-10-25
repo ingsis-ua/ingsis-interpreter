@@ -123,7 +123,7 @@ queda intacto. Un archivo de salida distinto que ya existe se reemplaza.
 El formatter **reescribe el fuente**: ajusta el espacio que alguna regla activa nombra y
 deja el resto tal como estaba. Una clave ausente no cae en un valor por defecto, significa
 **no tocar ese espacio**. Sin `--config` no se aplica ninguna regla de formato y la CLI muestra un aviso por
-`stderr`; también avisa si el archivo de configuración no activa ninguna regla. Por defecto el resultado va por stdout; `--output archivo` lo escribe a un
+`stderr`; también avisa si el archivo de configuración no activa ninguna regla, o si trae una clave que no usa ninguna regla (un typo, por ejemplo). Una clave conocida con un valor del tipo equivocado es un error de uso (exit `2`) que nombra la clave. Un archivo de configuración vacío equivale a `{}`. Por defecto el resultado va por stdout; `--output archivo` lo escribe a un
 archivo (nunca pisa el fuente). Reglas disponibles:
 
 | Clave | Qué controla | Valores |

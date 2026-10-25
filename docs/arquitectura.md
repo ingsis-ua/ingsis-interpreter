@@ -296,7 +296,7 @@ Es una etapa más del pipeline: implementa `Iterator<Result<List<Violation>>>` y
 | `identifier_format` | El formato exigido a los identificadores | `camel case` (también `camelCase` y `camel_case`) |
 | `mandatory-variable-or-literal-in-println` | Que `println` reciba solo un identificador o un literal | `true` / `false` |
 
-Una clave ausente deja la regla apagada. Un valor **desconocido** en `identifier_format` rompe con un mensaje que nombra el valor recibido y los soportados, en vez de apagar la regla en silencio.
+Una clave ausente deja la regla apagada. Un valor **desconocido** en `identifier_format` rompe con un mensaje que nombra el valor recibido y los soportados, en vez de apagar la regla en silencio. Un valor del tipo equivocado en cualquier clave conocida también rompe: `RulesConfiguration` nombra la clave, el tipo esperado y el valor. Cada configuración expone sus claves (`LinterConfiguration.KEYS`, `FormatterConfiguration.KEYS`) y la CLI avisa por las que no conoce ninguna de las dos.
 
 **Las dos convenciones de identificador están soportadas.** `camel case` y `snake case`, cada una con su `IdentifierFormatChecker` y su valor en el enum `IdentifierFormat`. La segunda entró para cumplir el TCK, que trae casos de las dos, y no cambió nada de lo que ya estaba escrito: es exactamente la extensión que el diseño preveía.
 

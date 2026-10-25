@@ -278,6 +278,13 @@ Una clave que no está deja su regla apagada. Un valor **desconocido** en
 `identifier_format` no apaga la regla en silencio: rompe con un mensaje que nombra el
 valor recibido y los soportados.
 
+Lo mismo vale para el formatter: una clave conocida con un valor del tipo equivocado
+(`"yes"` donde va `true`, `"2"` donde va `2`) es un error de uso (exit `2`) que nombra la
+clave, el tipo esperado y el valor recibido. Una clave que no usa ninguna regla —del
+linter ni del formatter, así un mismo archivo sirve para los dos— se avisa por `stderr`
+(`Aviso: la clave '…' no la usa ninguna regla`), que es lo que delata un typo. Un archivo
+de configuración vacío equivale a `{}`.
+
 Las dos reglas de argumento simple comparten el criterio de qué cuenta como
 "identificador o literal" (`SimpleArgument`), así que un nodo de expresión nuevo se decide
 en un solo lugar. Los colectores sí difieren: el de `readInput` baja también por las

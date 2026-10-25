@@ -1,6 +1,5 @@
 package org.printscript.config;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.IOException;
@@ -19,6 +18,6 @@ public final class YamlConfigurationMapper implements ConfigurationMapper {
 
     @Override
     public Map<String, Object> read(InputStream source) throws IOException {
-        return mapper.readValue(source, new TypeReference<Map<String, Object>>() {});
+        return JacksonDocuments.read(mapper, source);
     }
 }
