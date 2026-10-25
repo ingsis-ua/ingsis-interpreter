@@ -91,6 +91,41 @@ class FormattingCommandEndToEndTest {
     }
 
     @Test
+    void withoutConfigTheFileComesOutByteForByte() throws IOException {
+        String program = "\nlet s: string = 'hola';\n\nprintln(s);\n\n";
+        Path source = write("intacto.ps", program);
+
+        CliTestSupport.Result result = CliTestSupport.run(COMANDO, source.toString());
+
+        assertEquals(0, result.exitCode());
+        assertEquals(program, result.stdout());
+    }
+
+    @Test
+    void aFileWithoutFinalLineBreakDoesNotGainOne() throws IOException {
+        Path source = write("sin-salto.ps", "println(1);");
+        Path output = tempDir.resolve("salida.ps");
+
+        CliTestSupport.Result result =
+                CliTestSupport.run(COMANDO, source.toString(), "-o", output.toString());
+
+        assertEquals(0, result.exitCode());
+        assertEquals("println(1);", Files.readString(output, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void theOutputFileKeepsTheFinalLineBreakOfTheSource() throws IOException {
+        Path source = write("con-salto.ps", "println(1);\n");
+        Path output = tempDir.resolve("salida.ps");
+
+        CliTestSupport.Result result =
+                CliTestSupport.run(COMANDO, source.toString(), "-o", output.toString());
+
+        assertEquals(0, result.exitCode());
+        assertEquals("println(1);\n", Files.readString(output, StandardCharsets.UTF_8));
+    }
+
+    @Test
     void formattingA11ProgramAsVersion10KeepsItsBraces() throws IOException {
         Path source = write("if.ps", "if (flag) {\n  println(1);\n} else {\n  println(2);\n}\n");
 

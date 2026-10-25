@@ -250,12 +250,9 @@ class FormatterTest {
         assertEquals(1, failures.size());
     }
 
-    // el lexer descarta la comilla que delimitaba el string, así que el formatter tiene que
-    // reponerla sin romper el contenido: una cadena con comillas simples que adentro tiene
-    // una doble no puede salir reescrita con dobles, o queda como código inválido
     @Test
-    void aSingleQuotedStringHoldingADoubleQuoteIsRewrittenWithSingleQuotes() {
-        String source = "let s:string = 'a \"b\" c';";
+    void eachStringKeepsTheQuoteItWasWrittenWith() {
+        String source = "let s: string = 'hola' + \"chau\" + 'it\"s';";
 
         assertEquals(source, format(source, FormatterConfiguration.none()));
     }

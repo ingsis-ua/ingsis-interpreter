@@ -3,6 +3,7 @@ package org.printscript.formatter;
 import java.util.Iterator;
 import java.util.Optional;
 import org.printscript.common.Failure;
+import org.printscript.common.Position;
 import org.printscript.common.Result;
 import org.printscript.common.Success;
 import org.printscript.formatter.config.FormatterConfiguration;
@@ -45,26 +46,23 @@ public final class Formatter implements Iterator<Result<String>> {
                                     "Símbolo no reconocido: '" + token.value() + "'",
                                     token.range()));
         }
-        String piece = space(token) + lexemeOf(token);
+        String piece = space(token) + token.value();
         gaps.advancePast(previous, token);
         previous = token;
         return new Success<>(piece);
     }
 
-    // el lexer guarda el contenido del string sin las comillas, porque es lo que el
-    // intérprete tiene que imprimir. Para reescribir el fuente hay que devolvérselas.
-    // La comilla original se perdió, pero un literal sólo puede contener la comilla que no
-    // lo delimita, así que se reescribe con la que no aparece adentro: así una cadena que
-    // venía con comillas simples y contiene una doble no sale como código inválido.
-    private static String lexemeOf(Token token) {
-        if (token.type() != TokenType.STRING) {
-            return token.value();
-        }
-        char quote = token.value().indexOf('"') >= 0 ? '\'' : '"';
-        return quote + token.value() + quote;
+    public String ending(int sourceLines) {
+        int lastLine = previous == null ? 1 : previous.range().end().line();
+        return "\n".repeat(Math.max(0, sourceLines - lastLine));
     }
 
     private String space(Token token) {
-        return previous == null ? "" : gaps.between(previous, token);
+        return previous == null ? leading(token) : gaps.between(previous, token);
+    }
+
+    private static String leading(Token token) {
+        Position start = token.range().start();
+        return "\n".repeat(start.line() - 1) + " ".repeat(start.column() - 1);
     }
 }

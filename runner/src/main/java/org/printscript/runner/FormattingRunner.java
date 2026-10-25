@@ -29,11 +29,13 @@ public final class FormattingRunner {
             FormatterConfiguration configuration,
             Writer destination,
             Version version) {
-        Formatter formatter = new Formatter(LexerFactory.create(lines, version), configuration);
+        CountedLines counted = new CountedLines(lines);
+        Formatter formatter = new Formatter(LexerFactory.create(counted, version), configuration);
         List<Failure<?>> failures = new ArrayList<>();
         while (formatter.hasNext()) {
             write(formatter.next(), destination, failures);
         }
+        write(new Success<>(formatter.ending(counted.count())), destination, failures);
         flush(destination);
         return failures;
     }

@@ -100,7 +100,9 @@ public final class ExpressionBuilder {
     }
 
     private static Result<Expression> stringLiteral(Token token) {
-        return new Success<>(new StringLiteral(token.value(), token.range()));
+        String lexeme = token.value();
+        String content = lexeme.substring(1, lexeme.length() - 1);
+        return new Success<>(new StringLiteral(content, token.range()));
     }
 
     private static Result<Expression> booleanLiteral(Token token) {

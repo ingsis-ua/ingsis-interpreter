@@ -115,7 +115,7 @@ class LexerAcceptanceTest {
                         "PUNCTUATION|;|4:22-4:22",
                         "KEYWORD|println|5:1-5:7",
                         "PUNCTUATION|(|5:8-5:8",
-                        "STRING|Result: |5:9-5:18",
+                        "STRING|\"Result: \"|5:9-5:18",
                         "OPERATOR|+|5:20-5:20",
                         "IDENTIFIER|c|5:22-5:22",
                         "PUNCTUATION|)|5:23-5:23",
@@ -131,9 +131,9 @@ class LexerAcceptanceTest {
                 List.of(
                         "KEYWORD|println|1:1-1:7",
                         "PUNCTUATION|(|1:8-1:8",
-                        "STRING|one|1:9-1:13",
+                        "STRING|'one'|1:9-1:13",
                         "OPERATOR|+|1:15-1:15",
-                        "STRING|two|1:17-1:21",
+                        "STRING|\"two\"|1:17-1:21",
                         "PUNCTUATION|)|1:22-1:22",
                         "PUNCTUATION|;|1:23-1:23"),
                 tokens);
