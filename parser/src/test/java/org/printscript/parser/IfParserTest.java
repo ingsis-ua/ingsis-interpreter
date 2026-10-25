@@ -115,14 +115,14 @@ class IfParserTest {
     void aSyntaxErrorInsideABlockTravelsAsDataWithItsOwnRange() {
         Failure<?> failure = assertInstanceOf(Failure.class, parse("if ( a ) { println ( 1 ) }"));
 
-        assertEquals("Expected ';' at the end of the println statement", failure.message());
+        assertEquals("Falta ';' al final del println", failure.message());
     }
 
     @Test
     void anUnrecognizedStatementInsideABlockIsReportedAtItsFirstToken() {
         Failure<?> failure = assertInstanceOf(Failure.class, parse("if ( a ) { 42 ; }"));
 
-        assertEquals("Unrecognized statement", failure.message());
+        assertEquals("Sentencia no reconocida", failure.message());
         assertEquals(12, failure.range().start().column());
     }
 

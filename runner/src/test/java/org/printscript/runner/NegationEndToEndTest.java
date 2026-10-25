@@ -57,6 +57,6 @@ class NegationEndToEndTest {
                 new ValidationRunner().validate(List.of("println(-\"hola\");").iterator(), version);
 
         assertEquals(1, failures.size());
-        assertEquals("No se puede aplicar MINUS a string", failures.getFirst().message());
+        assertEquals("No se puede aplicar - a string", failures.getFirst().message());
     }
 }

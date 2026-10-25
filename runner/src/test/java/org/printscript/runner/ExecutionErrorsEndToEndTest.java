@@ -55,7 +55,7 @@ class ExecutionErrorsEndToEndTest {
 
         assertEquals(1, failures.size());
         Failure<?> failure = failures.getFirst();
-        assertEquals("Expected ';' at the end of the declaration", failure.message());
+        assertEquals("Falta ';' al final de la declaración", failure.message());
         assertRange(failure.range(), 3, 1, 3, 7);
         assertEquals(List.of(ANTES, "fin"), printer.lines);
     }
@@ -69,7 +69,7 @@ class ExecutionErrorsEndToEndTest {
 
         assertEquals(1, failures.size());
         Failure<?> failure = failures.getFirst();
-        assertEquals("Expected ':' after the variable name", failure.message());
+        assertEquals("Falta ':' después del nombre de la variable", failure.message());
         assertRange(failure.range(), 1, 7, 1, 12);
         assertEquals(List.of("despues"), printer.lines);
     }
@@ -83,7 +83,7 @@ class ExecutionErrorsEndToEndTest {
 
         assertEquals(1, failures.size());
         Failure<?> failure = failures.getFirst();
-        assertEquals("Unexpected token '*' in operand position", failure.message());
+        assertEquals("Se esperaba un valor y apareció '*'", failure.message());
         assertRange(failure.range(), 1, 17, 1, 17);
         assertEquals(List.of("sigue"), printer.lines);
     }
@@ -114,7 +114,7 @@ class ExecutionErrorsEndToEndTest {
 
         assertEquals(1, failures.size());
         Failure<?> failure = failures.getFirst();
-        assertEquals("No se puede aplicar MINUS entre string y string", failure.message());
+        assertEquals("No se puede aplicar - entre string y string", failure.message());
         assertRange(failure.range(), 3, 9, 3, 13);
         assertEquals(List.of(), printer.lines);
     }
@@ -128,7 +128,7 @@ class ExecutionErrorsEndToEndTest {
 
         assertEquals(1, failures.size());
         Failure<?> failure = failures.getFirst();
-        assertEquals("Unrecognized statement", failure.message());
+        assertEquals("Símbolo no reconocido: '@'", failure.message());
         assertRange(failure.range(), 2, 1, 2, 1);
         assertEquals(List.of(ANTES, "despues"), printer.lines);
     }
@@ -142,7 +142,7 @@ class ExecutionErrorsEndToEndTest {
 
         assertEquals(1, failures.size());
         Failure<?> failure = failures.getFirst();
-        assertEquals("Expected ')' after the println argument", failure.message());
+        assertEquals("Falta ')' después del argumento de println", failure.message());
         assertRange(failure.range(), 2, 15, 2, 15);
         assertEquals(List.of(ANTES, "despues"), printer.lines);
     }
@@ -155,7 +155,7 @@ class ExecutionErrorsEndToEndTest {
 
         assertEquals(1, failures.size());
         Failure<?> failure = failures.getFirst();
-        assertEquals("Expected ';' before the end of the stream", failure.message());
+        assertEquals("Falta ';' antes del final del archivo", failure.message());
         assertRange(failure.range(), 2, 17, 2, 18);
         assertEquals(List.of(ANTES), printer.lines);
     }

@@ -29,7 +29,7 @@ class ValidationCommandEndToEndTest {
         CliTestSupport.Result result = CliTestSupport.run("validation", file.toString());
 
         assertEquals(1, result.exitCode());
-        assertTrue(result.stderr().contains("Expected ':' after the variable name"));
+        assertTrue(result.stderr().contains("Falta ':' después del nombre de la variable"));
         assertTrue(result.stderr().contains("línea 1, columna 7"));
         assertTrue(result.stderr().contains("línea 1, columna 12"));
         assertTrue(result.stdout().isEmpty());

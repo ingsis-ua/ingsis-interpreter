@@ -110,7 +110,7 @@ class VisitorContractTest {
                         RANGE);
 
         assertEquals(
-                "No se puede aplicar MINUS entre boolean y number",
+                "No se puede aplicar - entre boolean y number",
                 assertInstanceOf(Failure.class, expression.accept(evaluator)).message());
     }
 

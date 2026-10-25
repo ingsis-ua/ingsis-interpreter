@@ -89,7 +89,7 @@ final class ExpressionTyper extends ExpressionOnlyVisitor<Result<Type>> {
                                         ? new Success<>(Type.NUMBER)
                                         : new Failure<>(
                                                 "No se puede aplicar "
-                                                        + unaryExpression.operator()
+                                                        + unaryExpression.operator().symbol()
                                                         + " a "
                                                         + type.writtenName(),
                                                 unaryExpression.range()));
@@ -133,7 +133,7 @@ final class ExpressionTyper extends ExpressionOnlyVisitor<Result<Type>> {
             Operator operator, Type left, Type right, Range range) {
         return new Failure<>(
                 "No se puede aplicar "
-                        + operator
+                        + operator.symbol()
                         + " entre "
                         + left.writtenName()
                         + " y "

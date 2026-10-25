@@ -88,7 +88,7 @@ class ReadParsingTest {
         Failure<?> failure =
                 assertInstanceOf(Failure.class, parse(Version.V11, "let n : string = readInput ;"));
 
-        assertEquals("Expected '(' after 'readInput'", failure.message());
+        assertEquals("Falta '(' después de 'readInput'", failure.message());
     }
 
     @Test
@@ -97,7 +97,7 @@ class ReadParsingTest {
                 assertInstanceOf(
                         Failure.class, parse(Version.V11, "let n : string = readInput ( 'p' ;"));
 
-        assertEquals("Expected ')' after the argument of 'readInput'", failure.message());
+        assertEquals("Falta ')' después del argumento de 'readInput'", failure.message());
     }
 
     @Test
@@ -106,6 +106,6 @@ class ReadParsingTest {
                 assertInstanceOf(
                         Failure.class, parse(Version.V10, "let n : string = readInput ( 'p' ) ;"));
 
-        assertEquals("Unexpected token 'readInput' in operand position", failure.message());
+        assertEquals("Se esperaba un valor y apareció 'readInput'", failure.message());
     }
 }

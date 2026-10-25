@@ -137,7 +137,7 @@ class ParserTest {
     }
 
     @Test
-    void unrecognizedStatementProducesFailureWithTheRangeOfTheFirstToken() {
+    void unrecognizedStatementProducesFailureWithTheRangeOfTheWholeStatement() {
         Parser parser =
                 parserOf(
                         List.of(new FakeStatementParser(GREET)),
@@ -148,7 +148,7 @@ class ParserTest {
         Result<Statement> result = parser.next();
 
         Failure<Statement> failure = assertInstanceOf(Failure.class, result);
-        assertEquals(rangeAt(1), failure.range());
+        assertEquals(new Range(new Position(1, 1), new Position(1, 3)), failure.range());
         assertFalse(parser.hasNext());
     }
 

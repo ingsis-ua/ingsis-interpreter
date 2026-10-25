@@ -15,7 +15,7 @@ public final class ConfigurationReader {
     public ConfigurationReader(List<ConfigurationMapper> mappers) {
         this.mappers = List.copyOf(mappers);
         if (this.mappers.isEmpty()) {
-            throw new IllegalArgumentException("At least one configuration mapper is required");
+            throw new IllegalArgumentException("Hace falta al menos un mapper de configuración");
         }
     }
 

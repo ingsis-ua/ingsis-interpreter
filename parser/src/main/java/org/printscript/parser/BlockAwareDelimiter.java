@@ -35,8 +35,8 @@ public final class BlockAwareDelimiter implements StatementDelimiter {
     @Override
     public String unterminatedMessage(List<Token> accumulated) {
         return depthOf(accumulated) > 0
-                ? "Expected '}' before the end of the stream"
-                : "Expected ';' before the end of the stream";
+                ? "Falta '}' antes del final del archivo"
+                : "Falta ';' antes del final del archivo";
     }
 
     private static boolean isElse(Optional<Token> token) {

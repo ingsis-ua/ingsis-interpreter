@@ -59,9 +59,9 @@ class ValidationRunnerTest {
 
         assertEquals(1, failures.size());
         Failure<?> failure = failures.getFirst();
-        assertEquals("Unrecognized statement", failure.message());
+        assertEquals("Sentencia no reconocida", failure.message());
         assertEquals(new Position(2, 1), failure.range().start());
-        assertEquals(new Position(2, 2), failure.range().end());
+        assertEquals(new Position(2, 3), failure.range().end());
     }
 
     // --- semántica: lo que antes solo se descubría ejecutando ---

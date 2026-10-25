@@ -38,7 +38,7 @@ public final class PrintlnParser implements StatementParser {
         return Tokens.expect(
                 tokens,
                 token -> Tokens.isPunctuation(token, "("),
-                "Expected '(' after 'println'",
+                "Falta '(' después de 'println'",
                 println.range());
     }
 
@@ -46,7 +46,7 @@ public final class PrintlnParser implements StatementParser {
         return Tokens.expect(
                 tokens,
                 token -> Tokens.isPunctuation(token, ")"),
-                "Expected ')' after the println argument",
+                "Falta ')' después del argumento de println",
                 argument.range());
     }
 
@@ -54,7 +54,7 @@ public final class PrintlnParser implements StatementParser {
         return Tokens.expect(
                 tokens,
                 token -> Tokens.isPunctuation(token, ";"),
-                "Expected ';' at the end of the println statement",
+                "Falta ';' al final del println",
                 close.range());
     }
 

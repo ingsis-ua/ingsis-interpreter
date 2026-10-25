@@ -62,7 +62,9 @@ public final class Executor extends StatementOnlyVisitor<Result<Void>> {
         // la conversión se aplica siempre; para cualquier inicializador que no sea una
         // lectura externa es un no-op, porque semantic ya garantizó que el tipo coincide
         return Conversions.toDeclaredType(
-                        existing.get().declaredType(), value, assignmentStatement.range())
+                        existing.get().declaredType(),
+                        value,
+                        assignmentStatement.expression().range())
                 .andThen(converted -> store(name, converted, assignmentStatement));
     }
 
@@ -137,9 +139,20 @@ public final class Executor extends StatementOnlyVisitor<Result<Void>> {
         if (initializer.isEmpty()) {
             return declareValue(name, declaredType, null, range, immutable);
         }
-        return evaluate(initializer.get())
-                .andThen(value -> Conversions.toDeclaredType(declaredType, value, range))
-                .andThen(value -> declareValue(name, declaredType, value, range, immutable));
+        Result<Object> value =
+                evaluate(initializer.get())
+                        .andThen(
+                                evaluated ->
+                                        Conversions.toDeclaredType(
+                                                declaredType,
+                                                evaluated,
+                                                initializer.get().range()));
+        if (value instanceof Failure<Object> failure) {
+            declareValue(name, declaredType, FailedDeclaration.INSTANCE, range, immutable);
+            return new Failure<>(failure.message(), failure.range());
+        }
+        return declareValue(
+                name, declaredType, ((Success<Object>) value).value(), range, immutable);
     }
 
     private Result<Void> declareValue(

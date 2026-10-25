@@ -107,10 +107,10 @@ class BlockAwareDelimiterTest {
     @Test
     void theMessageSaysWhatIsMissingDependingOnWhereItStopped() {
         assertEquals(
-                "Expected '}' before the end of the stream",
+                "Falta '}' antes del final del archivo",
                 delimiter.unterminatedMessage(Lexemes.tokensOf("if ( a ) { x = 1 ;")));
         assertEquals(
-                "Expected ';' before the end of the stream",
+                "Falta ';' antes del final del archivo",
                 delimiter.unterminatedMessage(Lexemes.tokensOf("let x : number = 1")));
     }
 }

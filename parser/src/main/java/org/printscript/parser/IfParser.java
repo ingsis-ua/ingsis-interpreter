@@ -95,7 +95,7 @@ public final class IfParser implements StatementParser {
         return Tokens.expect(
                 tokens,
                 token -> Tokens.isPunctuation(token, "("),
-                "Expected '(' after 'if'",
+                "Falta '(' después de 'if'",
                 keyword.range());
     }
 
@@ -103,7 +103,7 @@ public final class IfParser implements StatementParser {
         return Tokens.expect(
                 tokens,
                 token -> Tokens.isPunctuation(token, ")"),
-                "Expected ')' after the if condition",
+                "Falta ')' después de la condición del if",
                 condition.range());
     }
 
@@ -115,7 +115,7 @@ public final class IfParser implements StatementParser {
         return Tokens.expect(
                 tokens,
                 token -> Tokens.isPunctuation(token, "{"),
-                "Expected '{' to open the block",
+                "Falta '{' para abrir el bloque",
                 previous);
     }
 
@@ -141,14 +141,39 @@ public final class IfParser implements StatementParser {
     private Result<Statement> nextStatement(TokenBuffer tokens, Range open) {
         Optional<Token> next = tokens.lookahead(0);
         if (next.isEmpty()) {
-            return new Failure<>("Expected '}' to close the block", open);
+            return new Failure<>("Falta '}' para cerrar el bloque", open);
         }
         for (StatementParser parser : statementParsers.get()) {
             if (parser.matches(tokens)) {
                 return parser.parse(tokens);
             }
         }
-        return new Failure<>("Unrecognized statement", next.get().range());
+        return new Failure<>("Sentencia no reconocida", unrecognizedRange(tokens));
+    }
+
+    private static Range unrecognizedRange(TokenBuffer tokens) {
+        Token first = tokens.lookahead(0).orElseThrow();
+        Token last = first;
+        int depth = 0;
+        for (int index = 0; tokens.lookahead(index).isPresent(); index++) {
+            Token token = tokens.lookahead(index).orElseThrow();
+            if (Tokens.isPunctuation(token, "}") && depth == 0) {
+                break;
+            }
+            last = token;
+            depth = depth + depthChange(token);
+            if (Tokens.isPunctuation(token, ";") && depth == 0) {
+                break;
+            }
+        }
+        return new Range(first.range().start(), last.range().end());
+    }
+
+    private static int depthChange(Token token) {
+        if (Tokens.isPunctuation(token, "{")) {
+            return 1;
+        }
+        return Tokens.isPunctuation(token, "}") ? -1 : 0;
     }
 
     private static boolean startsElse(TokenBuffer tokens) {
