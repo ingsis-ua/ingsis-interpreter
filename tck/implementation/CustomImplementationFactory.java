@@ -29,6 +29,7 @@ import org.printscript.runtime.RuntimePorts;
 public class CustomImplementationFactory implements PrintScriptFactory {
 
     private static final ConfigurationReader CONFIGURATION = ConfigurationReader.standard();
+    private static final int MEMORY_RESERVE = 64 * 1024;
 
     @Override
     public PrintScriptInterpreter interpreter() {
@@ -40,9 +41,11 @@ public class CustomImplementationFactory implements PrintScriptFactory {
             // adentro del bucle de ejecución: el TCK lo espera reportado como un error más
             // y no como una JVM que se cae. Es el único caso en el que atrapar un Error en
             // vez de una Exception es lo correcto.
+            byte[][] reserve = {new byte[MEMORY_RESERVE]};
             try {
                 report(new ExecutionRunner().run(lines(src), ports, versionOf(version)), handler);
             } catch (OutOfMemoryError exhausted) {
+                reserve[0] = null;
                 handler.reportError(exhausted.getMessage());
             }
         };
