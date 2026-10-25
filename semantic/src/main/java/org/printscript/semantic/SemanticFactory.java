@@ -13,7 +13,15 @@ public final class SemanticFactory {
     private SemanticFactory() {}
 
     public static SemanticAnalyzer create(Iterator<Result<Statement>> statements, Version version) {
-        return new SemanticAnalyzer(statements, new StatementChecker(supportedTypes(version)));
+        return new SemanticAnalyzer(
+                statements, new StatementChecker(supportedTypes(version), language(version)));
+    }
+
+    private static String language(Version version) {
+        return switch (version) {
+            case V10 -> "PrintScript 1.0";
+            case V11 -> "PrintScript 1.1";
+        };
     }
 
     private static Set<Type> supportedTypes(Version version) {

@@ -165,6 +165,46 @@ class Version11SuiteEndToEndTest {
         assertFalse(failures.isEmpty());
     }
 
+    @Test
+    void version10NamesTheConstDeclarationItDoesNotSupport() {
+        Failure<?> failure = validate(Version.V10, "const c: number = 1;").getFirst();
+
+        assertEquals("'const' no está soportado en PrintScript 1.0", failure.message());
+        assertRange(failure, 1, 1, 20);
+    }
+
+    @Test
+    void version10NamesTheIfItDoesNotSupport() {
+        Failure<?> failure = validate(Version.V10, "if (true) { println(1); }").getFirst();
+
+        assertEquals("'if' no está soportado en PrintScript 1.0", failure.message());
+        assertEquals(new Position(1, 1), failure.range().start());
+    }
+
+    @Test
+    void version10NamesTheBooleanTypeItDoesNotSupport() {
+        Failure<?> failure = validate(Version.V10, "let b: boolean = 1;").getFirst();
+
+        assertEquals("El tipo boolean no está soportado en PrintScript 1.0", failure.message());
+        assertRange(failure, 1, 8, 14);
+    }
+
+    @Test
+    void version10NamesTheReadFunctionItDoesNotSupport() {
+        Failure<?> failure =
+                validate(Version.V10, "let n: string = readInput(\"n: \");").getFirst();
+
+        assertEquals("'readInput' no está soportado en PrintScript 1.0", failure.message());
+        assertRange(failure, 1, 17, 25);
+    }
+
+    @Test
+    void version10StillAcceptsReadInputAsAnOrdinaryName() {
+        assertEquals(
+                List.of(),
+                validate(Version.V10, "let readInput: number = 1;", "println(readInput);"));
+    }
+
     // --- lo que Validation tiene que detectar sin ejecutar nada ---
 
     @Test

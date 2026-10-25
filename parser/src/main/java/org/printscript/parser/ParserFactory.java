@@ -3,6 +3,7 @@ package org.printscript.parser;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import org.printscript.ast.ConstDeclaration;
 import org.printscript.ast.ReadEnv;
@@ -22,14 +23,14 @@ public final class ParserFactory {
 
     // agregar una sentencia a una versión es agregar un parser a esta lista
     private static List<StatementParser> statementParsers(Version version) {
-        ExpressionBuilder expressionBuilder = new ExpressionBuilder(reads(version));
+        ExpressionBuilder expressionBuilder = new ExpressionBuilder(reads(version), later(version));
         List<StatementParser> common =
                 List.of(
                         new DeclarationParser(expressionBuilder, declarators(version)),
                         new AssignmentParser(expressionBuilder),
                         new PrintlnParser(expressionBuilder));
         return switch (version) {
-            case V10 -> common;
+            case V10 -> concat(common, new LaterStatementParser(later(version)));
             // el if se pasa la lista como Supplier porque se contiene a sí mismo: es uno
             // de los parsers que puede aparecer adentro de su propio cuerpo. La lista se
             // arma una sola vez y el Supplier devuelve siempre esa misma instancia; si en
@@ -68,6 +69,17 @@ public final class ParserFactory {
                     Map.of(
                             "let", VariableDeclaration::new,
                             "const", ConstDeclaration::new);
+        };
+    }
+
+    private static LaterConstructs later(Version version) {
+        return switch (version) {
+            case V10 ->
+                    new LaterConstructs(
+                            Set.of("const", "if"),
+                            Set.of("readInput", "readEnv"),
+                            "PrintScript 1.0");
+            case V11 -> LaterConstructs.none();
         };
     }
 

@@ -22,6 +22,7 @@ import org.printscript.token.TokenType;
 public final class ExpressionBuilder {
 
     private final Map<String, ReadFactory> reads;
+    private final LaterConstructs later;
 
     // 1.0 no tiene funciones de lectura: la tabla vacía es la versión sin ellas
     public ExpressionBuilder() {
@@ -29,7 +30,12 @@ public final class ExpressionBuilder {
     }
 
     public ExpressionBuilder(Map<String, ReadFactory> reads) {
+        this(reads, LaterConstructs.none());
+    }
+
+    public ExpressionBuilder(Map<String, ReadFactory> reads, LaterConstructs later) {
         this.reads = Map.copyOf(reads);
+        this.later = later;
     }
 
     public Result<Expression> build(TokenBuffer tokens, Range anchor) {
@@ -85,7 +91,7 @@ public final class ExpressionBuilder {
             case NUMBER -> consume(tokens, numberLiteral(token));
             case STRING -> consume(tokens, stringLiteral(token));
             case BOOLEAN -> consume(tokens, booleanLiteral(token));
-            case IDENTIFIER -> consume(tokens, identifier(token));
+            case IDENTIFIER -> identifierOrLaterCall(tokens, token);
             case PUNCTUATION -> parsePunctuation(tokens, token);
             case KEYWORD -> parseKeyword(tokens, token);
             default -> unexpectedToken(token);
@@ -108,6 +114,15 @@ public final class ExpressionBuilder {
     private static Result<Expression> booleanLiteral(Token token) {
         return new Success<>(
                 new BooleanLiteral(Boolean.parseBoolean(token.value()), token.range()));
+    }
+
+    private Result<Expression> identifierOrLaterCall(TokenBuffer tokens, Token token) {
+        boolean called =
+                tokens.lookahead(1).filter(next -> Tokens.isPunctuation(next, "(")).isPresent();
+        if (called && later.calls().contains(token.value())) {
+            return new Failure<>(later.messageFor(token.value()), token.range());
+        }
+        return consume(tokens, identifier(token));
     }
 
     private static Result<Expression> identifier(Token token) {

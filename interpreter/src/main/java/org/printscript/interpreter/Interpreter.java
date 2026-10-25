@@ -1,6 +1,7 @@
 package org.printscript.interpreter;
 
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.Set;
 import org.printscript.ast.Statement;
 import org.printscript.common.Failure;
@@ -12,19 +13,21 @@ public final class Interpreter implements Iterator<Result<?>> {
 
     private final Iterator<Result<Statement>> statements;
     private final Executor executor;
-    private final Set<Class<? extends Statement>> supportedNodes;
+    private final Optional<NodeGate> gate;
 
     public Interpreter(Iterator<Result<Statement>> statements, Executor executor) {
-        this(statements, executor, null);
+        this.statements = statements;
+        this.executor = executor;
+        this.gate = Optional.empty();
     }
 
     public Interpreter(
             Iterator<Result<Statement>> statements,
             Executor executor,
-            Set<Class<? extends Statement>> supportedNodes) {
+            Set<Class<?>> supportedNodes) {
         this.statements = statements;
         this.executor = executor;
-        this.supportedNodes = supportedNodes;
+        this.gate = Optional.of(new NodeGate(supportedNodes));
     }
 
     @Override
@@ -39,12 +42,9 @@ public final class Interpreter implements Iterator<Result<?>> {
             return next;
         }
         Statement statement = ((Success<Statement>) next).value();
-        if (supportedNodes != null && !supportedNodes.contains(statement.getClass())) {
-            return new Failure<>(
-                    "Nodo "
-                            + statement.getClass().getSimpleName()
-                            + " no soportado por PrintScript",
-                    statement.range());
+        Optional<Failure<Void>> rejected = gate.flatMap(nodes -> nodes.check(statement));
+        if (rejected.isPresent()) {
+            return rejected.get();
         }
         return statement.accept(executor);
     }

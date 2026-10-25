@@ -64,7 +64,7 @@ class ParserFactoryTest {
         Failure<?> failure =
                 assertInstanceOf(Failure.class, parseFirst(Version.V10, constantDeclaration()));
 
-        assertEquals("Unrecognized statement", failure.message());
+        assertEquals("'const' no está soportado en PrintScript 1.0", failure.message());
     }
 
     @Test

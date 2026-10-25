@@ -1,5 +1,6 @@
 package org.printscript.semantic;
 
+import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
 import org.printscript.ast.AssignmentStatement;
@@ -25,10 +26,16 @@ import org.printscript.common.Success;
 public final class StatementChecker extends StatementOnlyVisitor<Result<Void>> {
 
     private final Set<Type> supportedTypes;
+    private final String language;
     private SymbolTable symbols;
 
     public StatementChecker(Set<Type> supportedTypes) {
+        this(supportedTypes, "esta versión");
+    }
+
+    public StatementChecker(Set<Type> supportedTypes, String language) {
         this.supportedTypes = Set.copyOf(supportedTypes);
+        this.language = language;
         this.symbols = new SymbolTable();
     }
 
@@ -65,7 +72,7 @@ public final class StatementChecker extends StatementOnlyVisitor<Result<Void>> {
             boolean immutable) {
         Optional<Type> declared = Type.fromWrittenName(annotation.name(), supportedTypes);
         if (declared.isEmpty()) {
-            return new Failure<>("Tipo desconocido: " + annotation.name(), annotation.range());
+            return new Failure<>(unknownType(annotation.name()), annotation.range());
         }
 
         // la tabla decide si ya estaba declarada, y solo mira el scope actual: el mismo
@@ -85,6 +92,13 @@ public final class StatementChecker extends StatementOnlyVisitor<Result<Void>> {
             return success();
         }
         return checkAssignable(initializer.get(), declared.get());
+    }
+
+    private String unknownType(String written) {
+        boolean existsLater = Type.fromWrittenName(written, EnumSet.allOf(Type.class)).isPresent();
+        return existsLater
+                ? "El tipo " + written + " no está soportado en " + language
+                : "Tipo desconocido: " + written;
     }
 
     @Override

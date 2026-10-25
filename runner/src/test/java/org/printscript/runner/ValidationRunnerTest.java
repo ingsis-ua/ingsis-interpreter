@@ -96,7 +96,9 @@ class ValidationRunnerTest {
         List<Failure<?>> failures = validateProgram("let x: boolean = 1;");
 
         assertEquals(1, failures.size());
-        assertEquals("Tipo desconocido: boolean", failures.getFirst().message());
+        assertEquals(
+                "El tipo boolean no está soportado en PrintScript 1.0",
+                failures.getFirst().message());
     }
 
     @Test
