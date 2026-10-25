@@ -10,4 +10,8 @@ import org.printscript.token.Token;
 public interface TokenConstructor {
 
     Optional<Token> tryBuild(String rest, Position start);
+
+    default Optional<Token> tryBuild(String line, int from, Position start) {
+        return tryBuild(line.substring(from), start);
+    }
 }

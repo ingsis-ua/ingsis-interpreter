@@ -77,11 +77,10 @@ public final class Lexer implements Iterator<Token> {
 
     private Token buildTokenAtCurrentColumn() {
         Position start = new Position(lineNumber, columnIndex + 1);
-        String rest = currentLine.substring(columnIndex);
         Token longest = null;
         int longestLength = 0;
         for (TokenConstructor constructor : constructors) {
-            Optional<Token> candidate = constructor.tryBuild(rest, start);
+            Optional<Token> candidate = constructor.tryBuild(currentLine, columnIndex, start);
             if (candidate.isEmpty()) {
                 continue;
             }
