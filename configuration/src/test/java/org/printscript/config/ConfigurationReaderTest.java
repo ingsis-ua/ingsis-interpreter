@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class ConfigurationReaderTest {
@@ -91,6 +92,20 @@ class ConfigurationReaderTest {
         RulesConfiguration configuration = reader.read(streamOf("{}"), JSON);
 
         assertTrue(configuration.getString(FORMAT).isEmpty());
+    }
+
+    @Test
+    void anEmptyFileIsAConfigurationWithoutKeysInBothFormats() {
+        assertEquals(Set.of(), reader.read(streamOf(""), JSON).keys());
+        assertEquals(Set.of(), reader.read(streamOf("  \n"), JSON).keys());
+        assertEquals(Set.of(), reader.read(streamOf(""), YAML).keys());
+        assertEquals(Set.of(), reader.read(streamOf("\n"), YAML).keys());
+    }
+
+    @Test
+    void aDocumentThatIsNotAnObjectFailsInsteadOfBeingIgnored() {
+        assertThrows(IllegalArgumentException.class, () -> reader.read(streamOf("[1, 2]"), JSON));
+        assertThrows(IllegalArgumentException.class, () -> reader.read(streamOf("- a"), YAML));
     }
 
     @Test

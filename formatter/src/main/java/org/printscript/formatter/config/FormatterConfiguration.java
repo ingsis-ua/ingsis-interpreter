@@ -1,6 +1,7 @@
 package org.printscript.formatter.config;
 
 import java.util.Optional;
+import java.util.Set;
 import org.printscript.config.RulesConfiguration;
 
 // Las reglas de formato, tal como las nombra la consigna.
@@ -31,6 +32,20 @@ public record FormatterConfiguration(
     public static final String IF_BRACE_SAME_LINE_KEY = "if-brace-same-line";
     public static final String IF_BRACE_BELOW_LINE_KEY = "if-brace-below-line";
     public static final String INDENT_INSIDE_IF_KEY = "indent-inside-if";
+
+    public static final Set<String> KEYS =
+            Set.of(
+                    SPACING_AROUND_EQUALS_KEY,
+                    NO_SPACING_AROUND_EQUALS_KEY,
+                    SPACING_BEFORE_COLON_KEY,
+                    SPACING_AFTER_COLON_KEY,
+                    SPACE_SURROUNDING_OPERATIONS_KEY,
+                    SINGLE_SPACE_SEPARATION_KEY,
+                    LINE_BREAK_AFTER_STATEMENT_KEY,
+                    LINE_BREAKS_AFTER_PRINTLN_KEY,
+                    IF_BRACE_SAME_LINE_KEY,
+                    IF_BRACE_BELOW_LINE_KEY,
+                    INDENT_INSIDE_IF_KEY);
 
     // nada activado: el archivo sale tal como entró
     public static FormatterConfiguration none() {

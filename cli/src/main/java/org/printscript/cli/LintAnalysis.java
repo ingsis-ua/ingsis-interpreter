@@ -21,7 +21,7 @@ final class LintAnalysis {
     static ExitCode run(Path sourceFile, Path configFile, PrintStream err, Version version) {
         LinterConfiguration configuration;
         try {
-            configuration = loadConfiguration(configFile);
+            configuration = loadConfiguration(configFile, err);
         } catch (IOException | IllegalArgumentException e) {
             err.println("No se pudo leer la configuración: " + e.getMessage());
             return ExitCode.USAGE_ERROR;
@@ -41,8 +41,9 @@ final class LintAnalysis {
 
     // sin archivo de configuración, ninguna regla está prendida (todas se apagan si
     // su clave no aparece), así que el análisis no reporta violaciones
-    private static LinterConfiguration loadConfiguration(Path configFile) throws IOException {
-        return LinterConfiguration.from(ConfigurationFiles.read(configFile));
+    private static LinterConfiguration loadConfiguration(Path configFile, PrintStream err)
+            throws IOException {
+        return LinterConfiguration.from(ConfigurationFiles.read(configFile, err));
     }
 
     private static ExitCode report(AnalysisReport analysisReport, PrintStream err) {
