@@ -30,6 +30,11 @@ final class SourceFileProcessor {
     private SourceFileProcessor() {}
 
     static ExitCode process(Path sourceFile, Operation operation, PrintStream err) {
+        return process(sourceFile, operation, err, ProgressLine.forTerminal(err));
+    }
+
+    static ExitCode process(
+            Path sourceFile, Operation operation, PrintStream err, ProgressLine progress) {
         return read(
                 sourceFile,
                 lines -> {
@@ -37,11 +42,17 @@ final class SourceFileProcessor {
                     new FailureReporter(err).report(failures);
                     return failures.isEmpty() ? ExitCode.SUCCESS : ExitCode.SOURCE_ERRORS;
                 },
-                err);
+                err,
+                progress);
     }
 
     // se encarga de reportar fallas y de traducir "hubo fallas" al exit code
     static ExitCode read(Path sourceFile, LineConsumer consumer, PrintStream err) {
+        return read(sourceFile, consumer, err, ProgressLine.forTerminal(err));
+    }
+
+    static ExitCode read(
+            Path sourceFile, LineConsumer consumer, PrintStream err, ProgressLine progress) {
         if (!FileArguments.requireExistingRegularFile(sourceFile, err)) {
             return ExitCode.USAGE_ERROR;
         }
@@ -51,7 +62,8 @@ final class SourceFileProcessor {
             try (BufferedReader reader =
                     Files.newBufferedReader(sourceFile, StandardCharsets.UTF_8)) {
                 Iterator<String> lines =
-                        new ProgressReportingIterator(reader.lines().iterator(), totalBytes, err);
+                        new ProgressReportingIterator(
+                                reader.lines().iterator(), totalBytes, progress);
                 return consumer.consume(lines);
             }
         } catch (IOException e) {

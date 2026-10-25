@@ -267,3 +267,10 @@ archivo — sin releer el archivo para calcularlo. La salida real del programa
 ejecutado va exclusivamente por `stdout`, así que redirigir la salida
 (`printscript execution archivo.ps > salida.txt`) captura solo lo que el programa
 imprime, nunca el progreso ni los mensajes de error.
+
+El progreso solo se muestra en una terminal interactiva: en un pipe, redirigido a un
+archivo o en los tests no se escribe nada. En la terminal, la línea de progreso se borra
+antes de cada salida del programa (y del código formateado por `stdout`) y se vuelve a
+dibujar con la siguiente línea leída, así nunca queda pegada a lo que el programa
+imprime. Al terminar el archivo cierra siempre en `Progreso: 100%` con un salto de línea,
+también con finales de línea CRLF.

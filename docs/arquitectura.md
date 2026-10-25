@@ -261,7 +261,7 @@ Es el único punto de entrada ejecutable del sistema (`org.printscript.cli.Cli.m
 
 **Interfaz interactiva.** Correr `cli` sin argumentos abre `InteractiveShell`, un REPL que mantiene su propio directorio de trabajo para navegar el filesystem (`pwd`/`ls`/`cd`) y correr las operaciones sobre archivos relativos a él. No duplica nada: usa el mismo `SourceFileProcessor` y los mismos runners que los subcomandos, así que el resultado es idéntico al de la forma no interactiva.
 
-**Progreso durante el parseo.** `ProgressReportingIterator` decora el iterador de líneas: estima el porcentaje consumido con `Files.size` (una sola llamada, sin releer el archivo) y bytes acumulados por línea, y solo escribe a `System.err` cuando el porcentaje entero cambia. El lexer y el parser nunca se enteran de que existe.
+**Progreso durante el parseo.** `ProgressReportingIterator` decora el iterador de líneas: estima el porcentaje consumido con `Files.size` (una sola llamada, sin releer el archivo) y bytes acumulados por línea, y dibuja el porcentaje a través de una `ProgressLine`, que solo está activa en una terminal interactiva. La consola del programa y el `Writer` del formatter por `stdout` le piden que se borre antes de escribir, y al agotarse el iterador la línea cierra en 100%. El lexer y el parser nunca se enteran de que existe.
 
 **Errores con rango completo.** `FailureReporter` formatea cada `Failure` (mensaje + `Range` con fila/columna de inicio y fin) a `System.err`, tal como exige la consigna.
 
