@@ -106,6 +106,53 @@ jobs:
           name: tck-paquetes-publicados
           path: build/official-tck/build/reports/tests/test
 
+  actualizar-tck:
+    name: Actualizar el fork del TCK
+    needs: [publicar, validar-publicacion]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    # Serializa los pushes al fork sin cancelar una sincronización en curso.
+    concurrency:
+      group: sincronizar-fork-tck
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.publicar.outputs.commit }}
+          persist-credentials: false
+      - name: Validar configuración del fork
+        env:
+          TCK_REPOSITORY: ${{ vars.TCK_FORK_REPOSITORY }}
+          TCK_BRANCH: ${{ vars.TCK_FORK_BRANCH }}
+          APP_ID: ${{ vars.TCK_APP_ID }}
+        run: |
+          [[ "$TCK_REPOSITORY" =~ ^[A-Za-z0-9_.-]+/printscript-tck$ ]]
+          [[ "$TCK_REPOSITORY" != austral-ingsis/printscript-tck ]]
+          [[ -n "$TCK_BRANCH" && -n "$APP_ID" ]]
+          echo "TCK_OWNER=${TCK_REPOSITORY%/*}" >> "$GITHUB_ENV"
+      - name: Obtener credencial temporal limitada al fork
+        id: app
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.TCK_APP_ID }}
+          private-key: ${{ secrets.SECRET }}
+          owner: ${{ env.TCK_OWNER }}
+          repositories: printscript-tck
+          permission-contents: write
+      - name: Clonar el fork
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ vars.TCK_FORK_REPOSITORY }}
+          ref: ${{ vars.TCK_FORK_BRANCH }}
+          token: ${{ steps.app.outputs.token }}
+          path: build/tck-fork
+      - name: Sincronizar adapters y versión validada
+        env:
+          VERSION: ${{ needs.publicar.outputs.version }}
+          SOURCE_COMMIT: ${{ needs.publicar.outputs.commit }}
+        run: bash ./tck/sync-fork.sh build/tck-fork "$VERSION" "$SOURCE_COMMIT"
+
   release:
     name: Crear Release de la CLI validada
     if: github.event_name == 'push'
