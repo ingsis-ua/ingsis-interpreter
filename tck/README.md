@@ -79,11 +79,11 @@ exclusivamente el grupo `org.printscript` desde GitHub Packages. También elimin
 repositorio Maven Local que declara upstream. Una versión local no puede ocultar un
 paquete ausente o mal publicado. El job desactiva el cache compartido de Gradle.
 
-En Actions se utiliza el token automático del job; no hay PAT, secrets manuales ni fork
-personal. El CI tiene solo lectura de contenido; publicación tiene `packages: write`;
-verificación tiene `packages: read`; Release tiene `contents: write`.
-El TCK se ejecuta en este repositorio con las pruebas del commit upstream fijado, no
-mediante una corrida remota del workflow de un fork.
+Publicación y validación usan el token automático del job con permisos de paquetes
+mínimos. Después de ambos jobs exitosos, `actualizar-tck` sincroniza los adapters y
+las dependencias de la versión publicada en el fork configurado, mediante una GitHub
+App limitada a ese fork. Ver [configuración, permisos y uso local](../docs/cd-tck-pr.md).
+La validación sigue ejecutando el TCK upstream fijado en este repositorio.
 
 Para publicar deliberadamente el working tree local, incluidos cambios sin commit:
 
