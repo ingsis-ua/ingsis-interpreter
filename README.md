@@ -322,9 +322,10 @@ Después de publicar, otro job en un runner nuevo descarga esa versión de GitHu
 y ejecuta los 59 tests del TCK. No usa Maven Local ni el cache Gradle de publicación.
 Los tests se conservan; la configuración de Java 25 y heap se explica en [tck/README.md](tck/README.md).
 
-No requiere un fork personal ni secrets manuales: cada job usa el `GITHUB_TOKEN`
-automático con sus permisos de lectura o publicación. Los paquetes deben estar asociados
-a este repositorio y permitir el acceso de sus workflows; un error de permisos falla el CD.
+Después de validar la publicación, el CD actualiza el fork configurado con los adapters
+y la versión publicada. Requiere configurar una GitHub App limitada al fork y las
+variables de destino; ver [requisitos y configuración](docs/cd-tck-pr.md).
+Publicación y validación conservan el `GITHUB_TOKEN` automático de este repositorio.
 
 Los tags `v*` también verifican y publican una versión estable. El Release de la CLI se
 crea únicamente después de que pase la validación de los paquetes publicados:
