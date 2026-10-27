@@ -1,0 +1,36 @@
+// Gestionado por ingsis-interpreter: usar solamente paquetes publicados.
+def printscriptVersion = file('printscript-version.txt').text.trim()
+repositories {
+    removeAll { it.name == 'MavenLocal' }
+    exclusiveContent {
+        forRepository {
+            maven {
+                url = uri('https://maven.pkg.github.com/ingsis-ua/ingsis-interpreter')
+                credentials {
+                    username = project.findProperty('gpr.user') ?: System.getenv('GITHUB_ACTOR')
+                    password = project.findProperty('gpr.key') ?: System.getenv('GITHUB_TOKEN')
+                }
+            }
+        }
+        filter { includeGroup('org.printscript') }
+    }
+    mavenCentral()
+}
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+// Reemplazar cualquier versión anterior declarada por el fork.
+configurations.configureEach {
+    resolutionStrategy.eachDependency {
+        if (requested.group == 'org.printscript') {
+            useVersion(printscriptVersion)
+        }
+    }
+}
+dependencies {
+    ['runner', 'runtime-api', 'common', 'configuration', 'linter', 'formatter'].each {
+        implementation "org.printscript:${it}:${printscriptVersion}"
+    }
+}
+tasks.withType(Test).configureEach {
+    minHeapSize = '5m'
+    maxHeapSize = '5m'
+}
