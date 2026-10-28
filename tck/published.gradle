@@ -6,9 +6,10 @@ repositories {
         forRepository {
             maven {
                 url = uri('https://maven.pkg.github.com/ingsis-ua/ingsis-interpreter')
+                // El workflow del fork exporta USERNAME/TOKEN; Actions y uso local, los otros.
                 credentials {
-                    username = project.findProperty('gpr.user') ?: System.getenv('GITHUB_ACTOR')
-                    password = project.findProperty('gpr.key') ?: System.getenv('GITHUB_TOKEN')
+                    username = project.findProperty('gpr.user') ?: System.getenv('GITHUB_ACTOR') ?: System.getenv('USERNAME')
+                    password = project.findProperty('gpr.key') ?: System.getenv('GITHUB_TOKEN') ?: System.getenv('TOKEN')
                 }
             }
         }

@@ -109,6 +109,8 @@ jobs:
   actualizar-tck:
     name: Actualizar el fork del TCK
     needs: [publicar, validar-publicacion]
+    # Sin fork configurado, el job se saltea en lugar de dejar el CD en rojo.
+    if: vars.TCK_FORK_REPOSITORY != ''
     runs-on: ubuntu-latest
     permissions:
       contents: read
