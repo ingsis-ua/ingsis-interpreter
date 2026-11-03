@@ -1,0 +1,70 @@
+@startuml
+title PrintScript - dependencias entre módulos
+
+top to bottom direction
+
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype polyline
+skinparam nodesep 45
+skinparam ranksep 65
+skinparam ArrowColor #526171
+skinparam packageBackgroundColor #F8FAFC
+skinparam componentBackgroundColor #FFFFFF
+skinparam defaultFontSize 13
+
+package "Módulos con dependencia directa de common" as uses_common {
+  component "cli" as cli #DBEAFE
+  component "runner" as runner #DBEAFE
+
+  together {
+    component "lexer" as lexer
+    component "parser" as parser
+    component "formatter" as formatter
+    component "linter" as linter
+    component "semantic" as semantic
+    component "interpreter" as interpreter
+  }
+
+  together {
+    component "token" as token #DCFCE7
+    component "ast" as ast #DCFCE7
+    component "configuration" as configuration #DCFCE7
+  }
+
+  ' Dependencias directas de la CLI
+  cli --> runner
+
+  ' Dependencias directas del Runner
+  runner --> lexer
+  runner --> parser
+  runner --> formatter
+  runner --> linter
+  runner --> semantic
+  runner --> interpreter
+  runner --> configuration
+
+  ' Dependencias directas de los motores
+  lexer --> token
+  parser --> token
+  parser --> ast
+  formatter --> token
+  formatter --> configuration
+  linter --> ast
+  linter --> configuration
+  semantic --> ast
+  interpreter --> ast
+}
+
+component "runtime-api\nPuertos de entrada, salida y entorno" as runtime #FEF3C7
+component "common\nResultados, errores y utilidades compartidas" as common #E2E8F0
+
+cli --> runtime
+runner --> runtime
+interpreter --> runtime
+
+' Esta relación representa las once dependencias directas a common.
+uses_common --> common : Todos los módulos del grupo
+
+@enduml
