@@ -112,8 +112,6 @@ final class InteractiveShell {
         }
     }
 
-    // --- operaciones sobre archivos ---
-
     // version           muestra la versión de la sesión
     // version 1.1       la cambia; las cinco operaciones la respetan desde ahí
     private void runVersion(String argument) {

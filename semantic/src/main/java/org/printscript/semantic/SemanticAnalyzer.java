@@ -31,7 +31,7 @@ public final class SemanticAnalyzer implements Iterator<Result<Statement>> {
         if (!pending.isEmpty()) {
             return pending.removeFirst();
         }
-        Result<Statement> result = statements.next();
+        Result<Statement> result = statements.next(); // Parser.next()
         // los errores de sintaxis viajan tal cual: no se re-empaquetan ni pierden su rango
         if (!(result instanceof Success<Statement> success)) {
             return result;

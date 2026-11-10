@@ -31,11 +31,6 @@ public final class ParserFactory {
                         new PrintlnParser(expressionBuilder));
         return switch (version) {
             case V10 -> concat(common, new LaterStatementParser(later(version)));
-            // el if se pasa la lista como Supplier porque se contiene a sí mismo: es uno
-            // de los parsers que puede aparecer adentro de su propio cuerpo. La lista se
-            // arma una sola vez y el Supplier devuelve siempre esa misma instancia; si en
-            // cambio recomputara statementParsers(V11), cada sentencia de cada bloque
-            // reconstruiría todo el grafo de parsers.
             case V11 -> {
                 AtomicReference<List<StatementParser>> self = new AtomicReference<>();
                 List<StatementParser> all =

@@ -37,7 +37,7 @@ public final class Interpreter implements Iterator<Result<?>> {
 
     @Override
     public Result<?> next() {
-        Result<Statement> next = statements.next();
+        Result<Statement> next = statements.next(); // SemanticAnalyzer.next()
         if (next instanceof Failure<Statement>) {
             return next;
         }

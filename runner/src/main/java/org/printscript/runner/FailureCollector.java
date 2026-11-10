@@ -13,7 +13,7 @@ final class FailureCollector {
     static List<Failure<?>> collect(Iterator<? extends Result<?>> results) {
         List<Failure<?>> failures = new ArrayList<>();
         while (results.hasNext()) {
-            if (results.next() instanceof Failure<?> failure) {
+            if (results.next() instanceof Failure<?> failure) { // Interpreter.next()
                 failures.add(failure);
             }
         }
