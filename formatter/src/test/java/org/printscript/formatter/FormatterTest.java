@@ -3,12 +3,14 @@ package org.printscript.formatter;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.printscript.common.Failure;
 import org.printscript.common.Success;
 import org.printscript.common.Version;
+import org.printscript.config.RulesConfiguration;
 import org.printscript.formatter.config.FormatterConfiguration;
 import org.printscript.lexer.LexerFactory;
 
@@ -16,75 +18,57 @@ import org.printscript.lexer.LexerFactory;
 // exactamente como entró. Cada test prende una sola regla, que es como las usa la consigna.
 class FormatterTest {
 
-    // una regla por vez, sobre la configuración vacía
+    // una regla por vez, sobre la configuración vacía, con las mismas claves del archivo
+    // de reglas
     private static final class Rules {
 
-        private Optional<Boolean> theEqualsSpacing = Optional.empty();
-        private boolean theBeforeColon;
-        private boolean theAfterColon;
-        private boolean theOperations;
-        private boolean theSingleSpace;
-        private boolean theBreakAfterStatement;
-        private Optional<Integer> thePrintlnBreaks = Optional.empty();
-        private Optional<Boolean> theBraceSameLine = Optional.empty();
-        private Optional<Integer> theIndent = Optional.empty();
+        private final Map<String, Object> values = new HashMap<>();
+
+        private Rules with(String key, Object value) {
+            values.put(key, value);
+            return this;
+        }
 
         private Rules equalsSpacing(boolean value) {
-            theEqualsSpacing = Optional.of(value);
-            return this;
+            return with(
+                    value ? "enforce-spacing-around-equals" : "enforce-no-spacing-around-equals",
+                    true);
         }
 
         private Rules afterColon() {
-            theAfterColon = true;
-            return this;
+            return with("enforce-spacing-after-colon-in-declaration", true);
         }
 
         private Rules beforeColon() {
-            theBeforeColon = true;
-            return this;
+            return with("enforce-spacing-before-colon-in-declaration", true);
         }
 
         private Rules operations() {
-            theOperations = true;
-            return this;
+            return with("mandatory-space-surrounding-operations", true);
         }
 
         private Rules singleSpace() {
-            theSingleSpace = true;
-            return this;
+            return with("mandatory-single-space-separation", true);
         }
 
         private Rules breakAfterStatement() {
-            theBreakAfterStatement = true;
-            return this;
+            return with("mandatory-line-break-after-statement", true);
         }
 
         private Rules printlnBreaks(int value) {
-            thePrintlnBreaks = Optional.of(value);
-            return this;
+            return with("line-breaks-after-println", value);
         }
 
         private Rules braceSameLine(boolean value) {
-            theBraceSameLine = Optional.of(value);
-            return this;
+            return with(value ? "if-brace-same-line" : "if-brace-below-line", true);
         }
 
         private Rules indent(int value) {
-            theIndent = Optional.of(value);
-            return this;
+            return with("indent-inside-if", value);
         }
 
         private FormatterConfiguration build() {
-            return new FormatterConfiguration(
-                    theEqualsSpacing,
-                    theBeforeColon,
-                    theAfterColon,
-                    theOperations,
-                    theSingleSpace,
-                    theBreakAfterStatement,
-                    thePrintlnBreaks,
-                    theBraceSameLine,
-                    theIndent);
+            return FormatterConfiguration.from(new RulesConfiguration(values));
         }
     }
 
