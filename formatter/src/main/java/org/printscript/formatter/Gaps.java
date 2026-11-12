@@ -1,39 +1,46 @@
 package org.printscript.formatter;
 
+import static org.printscript.formatter.rules.TokenShapes.isPunctuation;
+
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import org.printscript.formatter.config.FormatterConfiguration;
+import org.printscript.formatter.rules.ActiveRule;
+import org.printscript.formatter.rules.FormatRule;
+import org.printscript.formatter.rules.Layout;
 import org.printscript.token.Token;
-import org.printscript.token.TokenType;
 
 // Decide qué va entre dos tokens.
-final class Gaps {
+//
+// No conoce ninguna regla: les pregunta en orden y gana la primera que opine. Si ninguna
+// opina, el espacio queda como estaba en el fuente. Agregar una regla no cambia esta clase.
+final class Gaps implements Layout {
 
-    private static final Set<String> OPERATIONS = Set.of("+", "-", "*", "/");
+    private final List<ActiveRule> rules;
 
-    private final FormatterConfiguration configuration;
-
+    // cuántas llaves hay abiertas: es la forma del fuente, no una regla, y la necesita la
+    // sangría de cualquier salto de línea
     private int depth;
-    private boolean insidePrintln;
-    private boolean negationPending;
 
     Gaps(FormatterConfiguration configuration) {
-        this.configuration = configuration;
+        this.rules = configuration.rules().stream().map(FormatRule::start).toList();
     }
 
     String between(Token previous, Token current) {
-        return forced(previous, current).orElseGet(() -> original(previous, current));
+        for (ActiveRule rule : rules) {
+            Optional<String> gap = rule.gap(previous, current, this);
+            if (gap.isPresent()) {
+                return gap.get();
+            }
+        }
+        return original(previous, current);
     }
 
     // el estado se actualiza después de decidir el espacio, porque la decisión mira la
     // sentencia que termina, no la que empieza
     void advancePast(Token previous, Token current) {
-        negationPending = isOperator(current, "-") && opensAnOperand(previous);
-        if (previous != null && isPunctuation(previous, ";")) {
-            insidePrintln = false;
-        }
-        if (isKeyword(current, "println")) {
-            insidePrintln = true;
+        for (ActiveRule rule : rules) {
+            rule.advancePast(previous, current);
         }
         if (isPunctuation(current, "{")) {
             depth = depth + 1;
@@ -42,114 +49,9 @@ final class Gaps {
         }
     }
 
-    // las reglas se consultan en orden y gana la primera que opine
-    private Optional<String> forced(Token previous, Token current) {
-        Optional<String> result = afterPrintln(previous, current);
-        if (result.isPresent()) {
-            return result;
-        }
-        result = afterStatement(previous, current);
-        if (result.isPresent()) {
-            return result;
-        }
-        result = bracePlacement(current);
-        if (result.isPresent()) {
-            return result;
-        }
-        result = aroundEquals(previous, current);
-        if (result.isPresent()) {
-            return result;
-        }
-        result = beforeColon(current);
-        if (result.isPresent()) {
-            return result;
-        }
-        result = afterColon(previous);
-        if (result.isPresent()) {
-            return result;
-        }
-        result = afterNegation(previous, current);
-        if (result.isPresent()) {
-            return result;
-        }
-        result = aroundOperations(previous, current);
-        return result.isPresent() ? result : singleSpace(previous, current);
-    }
-
-    private Optional<String> afterPrintln(Token previous, Token current) {
-        if (!insidePrintln || !isPunctuation(previous, ";")) {
-            return Optional.empty();
-        }
-        return configuration
-                .lineBreaksAfterPrintln()
-                .map(howMany -> lineBreaks(howMany + 1, current));
-    }
-
-    // solo si la sentencia siguiente arranca en la misma línea: si ya había un salto, la
-    // regla está cumplida y no hay nada que imponer
-    private Optional<String> afterStatement(Token previous, Token current) {
-        boolean applies =
-                configuration.lineBreakAfterStatement()
-                        && isPunctuation(previous, ";")
-                        && sameLine(previous, current);
-        return applies ? Optional.of(lineBreaks(1, current)) : Optional.empty();
-    }
-
-    private Optional<String> bracePlacement(Token current) {
-        if (!isPunctuation(current, "{")) {
-            return Optional.empty();
-        }
-        return configuration
-                .ifBraceOnSameLine()
-                .map(onSameLine -> onSameLine ? " " : lineBreaks(1, current));
-    }
-
-    private Optional<String> aroundEquals(Token previous, Token current) {
-        if (!isOperator(previous, "=") && !isOperator(current, "=")) {
-            return Optional.empty();
-        }
-        return configuration.spacingAroundEquals().map(spaced -> spaced ? " " : "");
-    }
-
-    private Optional<String> beforeColon(Token current) {
-        return configuration.spacingBeforeColon() && isPunctuation(current, ":")
-                ? Optional.of(" ")
-                : Optional.empty();
-    }
-
-    private Optional<String> afterColon(Token previous) {
-        return configuration.spacingAfterColon() && isPunctuation(previous, ":")
-                ? Optional.of(" ")
-                : Optional.empty();
-    }
-
-    private Optional<String> afterNegation(Token previous, Token current) {
-        boolean spacingRule =
-                configuration.spaceSurroundingOperations() || configuration.singleSpaceSeparation();
-        return negationPending && spacingRule && sameLine(previous, current)
-                ? Optional.of("")
-                : Optional.empty();
-    }
-
-    private static boolean opensAnOperand(Token previous) {
-        return previous == null
-                || previous.type() == TokenType.OPERATOR
-                || isPunctuation(previous, "(");
-    }
-
-    private Optional<String> aroundOperations(Token previous, Token current) {
-        return configuration.spaceSurroundingOperations()
-                        && (isOperation(previous) || isOperation(current))
-                ? Optional.of(" ")
-                : Optional.empty();
-    }
-
-    // todo separado por un espacio, salvo el ';', que se queda contra lo que cierra
-    private Optional<String> singleSpace(Token previous, Token current) {
-        if (!configuration.singleSpaceSeparation() || !sameLine(previous, current)) {
-            return Optional.empty();
-        }
-        return Optional.of(isPunctuation(current, ";") ? "" : " ");
+    @Override
+    public String lineBreaks(int howMany, Token current) {
+        return "\n".repeat(howMany) + indentBefore(current, 0);
     }
 
     private String original(Token previous, Token current) {
@@ -161,41 +63,20 @@ final class Gaps {
         return "\n".repeat(breaks) + indentBefore(current, current.range().start().column() - 1);
     }
 
-    private String lineBreaks(int howMany, Token current) {
-        return "\n".repeat(howMany) + indentBefore(current, 0);
-    }
-
-    // la sangría configurada manda sobre la que traía el archivo; el '}' cierra su nivel,
-    // así que se alinea con la línea del if y no con el cuerpo
+    // la sangría que pida una regla manda sobre la que traía el archivo; el '}' cierra su
+    // nivel, así que se alinea con la línea del if y no con el cuerpo
     private String indentBefore(Token current, int asItWas) {
         int level = isPunctuation(current, "}") ? depth - 1 : depth;
-        return configuration
-                .indentInsideIf()
-                .map(size -> spaces(size * level))
-                .orElseGet(() -> spaces(asItWas));
+        for (ActiveRule rule : rules) {
+            Optional<Integer> indent = rule.indent(level);
+            if (indent.isPresent()) {
+                return spaces(indent.get());
+            }
+        }
+        return spaces(asItWas);
     }
 
     private static String spaces(int howMany) {
         return " ".repeat(Math.max(0, howMany));
-    }
-
-    private static boolean sameLine(Token previous, Token current) {
-        return previous.range().end().line() == current.range().start().line();
-    }
-
-    private static boolean isOperation(Token token) {
-        return token.type() == TokenType.OPERATOR && OPERATIONS.contains(token.value());
-    }
-
-    private static boolean isOperator(Token token, String text) {
-        return token.type() == TokenType.OPERATOR && text.equals(token.value());
-    }
-
-    private static boolean isPunctuation(Token token, String text) {
-        return token.type() == TokenType.PUNCTUATION && text.equals(token.value());
-    }
-
-    private static boolean isKeyword(Token token, String text) {
-        return token.type() == TokenType.KEYWORD && text.equals(token.value());
     }
 }

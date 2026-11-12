@@ -1,8 +1,20 @@
 package org.printscript.formatter.config;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.printscript.config.RulesConfiguration;
+import org.printscript.formatter.rules.BracePlacement;
+import org.printscript.formatter.rules.EqualsSpacing;
+import org.printscript.formatter.rules.FormatRule;
+import org.printscript.formatter.rules.IfIndent;
+import org.printscript.formatter.rules.OperationsSpacing;
+import org.printscript.formatter.rules.PrintlnBreaks;
+import org.printscript.formatter.rules.SingleSpace;
+import org.printscript.formatter.rules.SpaceAfterColon;
+import org.printscript.formatter.rules.SpaceBeforeColon;
+import org.printscript.formatter.rules.StatementBreak;
 
 // Las reglas de formato, tal como las nombra la consigna.
 // Todas son opcionales y ninguna tiene un valor por defecto
@@ -77,6 +89,31 @@ public record FormatterConfiguration(
                 rules.getInt(LINE_BREAKS_AFTER_PRINTLN_KEY),
                 bracePlacementOf(rules),
                 rules.getInt(INDENT_INSIDE_IF_KEY));
+    }
+
+    // las reglas activas, en el orden en que se consultan: gana la primera que opine
+    public List<FormatRule> rules() {
+        List<FormatRule> rules = new ArrayList<>();
+        lineBreaksAfterPrintln.ifPresent(howMany -> rules.add(new PrintlnBreaks(howMany)));
+        if (lineBreakAfterStatement) {
+            rules.add(new StatementBreak());
+        }
+        ifBraceOnSameLine.ifPresent(sameLine -> rules.add(new BracePlacement(sameLine)));
+        spacingAroundEquals.ifPresent(spaced -> rules.add(new EqualsSpacing(spaced)));
+        if (spacingBeforeColon) {
+            rules.add(new SpaceBeforeColon());
+        }
+        if (spacingAfterColon) {
+            rules.add(new SpaceAfterColon());
+        }
+        if (spaceSurroundingOperations) {
+            rules.add(new OperationsSpacing());
+        }
+        if (singleSpaceSeparation) {
+            rules.add(new SingleSpace());
+        }
+        indentInsideIf.ifPresent(size -> rules.add(new IfIndent(size)));
+        return List.copyOf(rules);
     }
 
     // dos claves opuestas sobre el mismo espacio: la que pide espacio manda si están las dos

@@ -260,4 +260,17 @@ class FormatterTest {
 
         assertEquals(source, format(source, FormatterConfiguration.none()));
     }
+
+    // el runner reusa la misma configuración para cada archivo: lo que una regla recuerda
+    // (si está dentro de un println, si viene un menos unario) no puede pasar de uno al otro
+    @Test
+    void aConfigurationCanFormatTwiceWithoutCarryingState() {
+        FormatterConfiguration rules = new Rules().printlnBreaks(1).operations().build();
+        String source = "println(1);\nlet a: number=2*-3;";
+
+        String first = format(source, rules);
+
+        assertEquals("println(1);\n\nlet a: number=2 * -3;", first);
+        assertEquals(first, format(source, rules));
+    }
 }
