@@ -7,36 +7,22 @@ import java.util.Optional;
 import org.printscript.token.Token;
 
 // mandatory-single-space-separation: todo separado por un espacio, salvo el ';', que se
-// queda contra lo que cierra
-public record SingleSpace() implements FormatRule {
+// queda contra lo que cierra, y el menos unario, que se queda pegado
+public record SingleSpace() implements FormatRule, ActiveRule {
 
     public static final RuleDefinition DEFINITION =
             RuleDefinition.flag("mandatory-single-space-separation", 80, new SingleSpace());
 
     @Override
     public ActiveRule start() {
-        return new Active();
+        return UnaryMinus.before(this);
     }
 
-    private static final class Active implements ActiveRule {
-
-        private final UnaryMinus unaryMinus = new UnaryMinus();
-
-        @Override
-        public Optional<String> gap(Token previous, Token current, Layout layout) {
-            return unaryMinus.gap(previous, current).or(() -> separation(previous, current));
+    @Override
+    public Optional<String> gap(Token previous, Token current, Layout layout) {
+        if (!sameLine(previous, current)) {
+            return Optional.empty();
         }
-
-        @Override
-        public void advancePast(Token previous, Token current) {
-            unaryMinus.advancePast(previous, current);
-        }
-
-        private static Optional<String> separation(Token previous, Token current) {
-            if (!sameLine(previous, current)) {
-                return Optional.empty();
-            }
-            return Optional.of(isPunctuation(current, ";") ? "" : " ");
-        }
+        return Optional.of(isPunctuation(current, ";") ? "" : " ");
     }
 }
