@@ -8,15 +8,15 @@ import java.util.Optional;
 import org.printscript.runtime.RuntimePorts;
 
 // puertos en memoria para los tests: nada de stdin ni del entorno real de la máquina
-final class Ports {
+public final class Ports {
 
     private Ports() {}
 
-    static RuntimePorts of(org.printscript.runtime.OutputPrinter printer) {
+    public static RuntimePorts of(org.printscript.runtime.OutputPrinter printer) {
         return new RuntimePorts(printer, Optional::empty, name -> Optional.empty());
     }
 
-    static RuntimePorts of(
+    public static RuntimePorts of(
             org.printscript.runtime.OutputPrinter printer,
             List<String> input,
             Map<String, String> environment) {

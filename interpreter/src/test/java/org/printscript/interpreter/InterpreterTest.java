@@ -22,6 +22,7 @@ import org.printscript.common.Position;
 import org.printscript.common.Range;
 import org.printscript.common.Result;
 import org.printscript.common.Success;
+import org.printscript.common.Version;
 import org.printscript.runtime.OutputPrinter;
 
 class InterpreterTest {
@@ -145,7 +146,9 @@ class InterpreterTest {
     private static Interpreter interpreterOf(
             OutputPrinter printer, List<Result<Statement>> results) {
         return new Interpreter(
-                new ResultStream(results), new Executor(new Environment(), Ports.of(printer)));
+                new ResultStream(results),
+                InterpreterFactory.rules(Version.V11),
+                Ports.of(printer));
     }
 
     private static List<Result<?>> drain(Interpreter interpreter) {

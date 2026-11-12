@@ -9,8 +9,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.printscript.ast.Block;
+import org.printscript.ast.BooleanLiteral;
 import org.printscript.ast.Identifier;
 import org.printscript.ast.NumberLiteral;
 import org.printscript.ast.PrintlnStatement;
@@ -76,12 +77,12 @@ class InterpreterNodeGateTest {
             OutputPrinter printer, List<Result<Statement>> results) {
         return new Interpreter(
                 new ResultStream(results),
-                new Executor(new Environment(), Ports.of(printer)),
-                Set.of(
+                Run.rulesOnly(
                         PrintlnStatement.class,
                         StringLiteral.class,
                         NumberLiteral.class,
-                        Identifier.class));
+                        Identifier.class),
+                Ports.of(printer));
     }
 
     @Test
@@ -151,5 +152,27 @@ class InterpreterNodeGateTest {
 
         assertInstanceOf(Success.class, result, String.valueOf(result));
         assertEquals(List.of("hola"), printer.lines);
+    }
+
+    @Test
+    void unsupportedNodeAfterPrintlnInsideBlockPrintsNothing() {
+        Statement block =
+                new Block(
+                        List.of(
+                                new PrintlnStatement(new StringLiteral("antes", ANY), ANY),
+                                new PrintlnStatement(new BooleanLiteral(true, ANY), ANY)),
+                        ANY);
+        InMemoryPrinter printer = new InMemoryPrinter();
+        Interpreter interpreter =
+                new Interpreter(
+                        new ResultStream(List.of(new Success<>(block))),
+                        Run.rulesWithout(BooleanLiteral.class),
+                        Ports.of(printer));
+
+        Result<?> result = interpreter.next();
+
+        Failure<?> failure = assertInstanceOf(Failure.class, result, String.valueOf(result));
+        assertEquals("Nodo BooleanLiteral no soportado por PrintScript", failure.message());
+        assertEquals(List.of(), printer.lines);
     }
 }

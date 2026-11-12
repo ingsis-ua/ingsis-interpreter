@@ -1,4 +1,4 @@
-package org.printscript.interpreter;
+package org.printscript.interpreter.rules.expressions;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.printscript.ast.BinaryExpression;
+import org.printscript.ast.BooleanLiteral;
 import org.printscript.ast.Expression;
 import org.printscript.ast.Identifier;
 import org.printscript.ast.NumberLiteral;
@@ -18,13 +19,17 @@ import org.printscript.common.Position;
 import org.printscript.common.Range;
 import org.printscript.common.Result;
 import org.printscript.common.Success;
+import org.printscript.interpreter.Ports;
+import org.printscript.interpreter.Run;
+import org.printscript.interpreter.engine.Execution;
+import org.printscript.interpreter.state.Environment;
 
 class ExpressionEvaluatorTest {
 
     private static final Range ANY = rangeAt(1, 1, 1, 1);
 
-    private static ExpressionEvaluator newEvaluator(Environment environment) {
-        return new ExpressionEvaluator(
+    private static Execution newEvaluator(Environment environment) {
+        return Run.execution(
                 environment,
                 Ports.of(
                         new org.printscript.runtime.OutputPrinter() {
@@ -60,12 +65,12 @@ class ExpressionEvaluatorTest {
     }
 
     private static Object evaluate(Expression expression, Environment environment) {
-        Result<Object> result = expression.accept(newEvaluator(environment));
+        Result<Object> result = newEvaluator(environment).evaluate(expression);
         return assertInstanceOf(Success.class, result, String.valueOf(result)).value();
     }
 
     private static Failure<Object> evaluateFailing(Expression expression, Environment environment) {
-        Result<Object> result = expression.accept(newEvaluator(environment));
+        Result<Object> result = newEvaluator(environment).evaluate(expression);
         @SuppressWarnings("unchecked")
         Failure<Object> failure = assertInstanceOf(Failure.class, result, String.valueOf(result));
         return failure;
@@ -131,5 +136,22 @@ class ExpressionEvaluatorTest {
         assertEquals(range, failure.range());
         assertTrue(failure.message().contains("aplicar -"), failure.message());
         assertTrue(failure.message().contains("string"), failure.message());
+    }
+
+    @Test
+    void booleanLiteralsEvaluateToTheirValue() {
+        assertEquals(true, evaluate(new BooleanLiteral(true, ANY), new Environment()));
+        assertEquals(false, evaluate(new BooleanLiteral(false, ANY), new Environment()));
+    }
+
+    // semantic lo rechaza antes, pero el intérprete no puede quedarse mudo si le llega
+    // igual: la red de seguridad tiene que nombrar el tipo correcto
+    @Test
+    void anOperationOverABooleanNamesTheTypeInTheMessage() {
+        Expression expression = binary(new BooleanLiteral(true, ANY), Operator.MINUS, number(1));
+
+        assertEquals(
+                "No se puede aplicar - entre boolean y number",
+                evaluateFailing(expression, new Environment()).message());
     }
 }

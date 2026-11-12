@@ -1,8 +1,6 @@
 package org.printscript.interpreter;
 
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
 import org.printscript.ast.AssignmentStatement;
 import org.printscript.ast.BinaryExpression;
 import org.printscript.ast.Block;
@@ -20,47 +18,58 @@ import org.printscript.ast.UnaryExpression;
 import org.printscript.ast.VariableDeclaration;
 import org.printscript.common.Result;
 import org.printscript.common.Version;
+import org.printscript.interpreter.engine.NodeRules;
+import org.printscript.interpreter.rules.expressions.BinaryExpressionRule;
+import org.printscript.interpreter.rules.expressions.BooleanLiteralRule;
+import org.printscript.interpreter.rules.expressions.IdentifierRule;
+import org.printscript.interpreter.rules.expressions.NumberLiteralRule;
+import org.printscript.interpreter.rules.expressions.ReadEnvRule;
+import org.printscript.interpreter.rules.expressions.ReadInputRule;
+import org.printscript.interpreter.rules.expressions.StringLiteralRule;
+import org.printscript.interpreter.rules.expressions.UnaryExpressionRule;
+import org.printscript.interpreter.rules.statements.AssignmentRule;
+import org.printscript.interpreter.rules.statements.BlockRule;
+import org.printscript.interpreter.rules.statements.ConstDeclarationRule;
+import org.printscript.interpreter.rules.statements.IfRule;
+import org.printscript.interpreter.rules.statements.PrintlnRule;
+import org.printscript.interpreter.rules.statements.VariableDeclarationRule;
 import org.printscript.runtime.RuntimePorts;
 
-// acá vive lo que el intérprete sabe de cada versión
+// acá vive lo que el intérprete sabe de cada versión: qué regla ejecuta cada nodo
+// agregar un nodo es escribir su regla y registrarla acá; el Executor no cambia
 public final class InterpreterFactory {
 
     private InterpreterFactory() {}
 
     public static Interpreter create(
             Iterator<Result<Statement>> statements, RuntimePorts ports, Version version) {
-        Executor executor = new Executor(new Environment(), ports);
-        return new Interpreter(statements, executor, supportedNodes(version));
+        return new Interpreter(statements, rules(version), ports);
     }
 
-    private static Set<Class<?>> union(Set<Class<?>> base, Class<?>... extra) {
-        Set<Class<?>> all = new HashSet<>(base);
-        all.addAll(Set.of(extra));
-        return Set.copyOf(all);
-    }
-
-    private static Set<Class<?>> supportedNodes(Version version) {
-        Set<Class<?>> common =
-                Set.of(
-                        VariableDeclaration.class,
-                        AssignmentStatement.class,
-                        PrintlnStatement.class,
-                        NumberLiteral.class,
-                        StringLiteral.class,
-                        Identifier.class,
-                        BinaryExpression.class,
-                        UnaryExpression.class);
+    public static NodeRules rules(Version version) {
         return switch (version) {
-            case V10 -> common;
+            case V10 -> version10Rules().build();
             case V11 ->
-                    union(
-                            common,
-                            ConstDeclaration.class,
-                            IfStatement.class,
-                            Block.class,
-                            BooleanLiteral.class,
-                            ReadInput.class,
-                            ReadEnv.class);
+                    version10Rules()
+                            .statement(ConstDeclaration.class, new ConstDeclarationRule())
+                            .statement(IfStatement.class, new IfRule())
+                            .statement(Block.class, new BlockRule())
+                            .expression(BooleanLiteral.class, new BooleanLiteralRule())
+                            .expression(ReadInput.class, new ReadInputRule())
+                            .expression(ReadEnv.class, new ReadEnvRule())
+                            .build();
         };
+    }
+
+    private static NodeRules.Builder version10Rules() {
+        return NodeRules.builder()
+                .statement(VariableDeclaration.class, new VariableDeclarationRule())
+                .statement(AssignmentStatement.class, new AssignmentRule())
+                .statement(PrintlnStatement.class, new PrintlnRule())
+                .expression(NumberLiteral.class, new NumberLiteralRule())
+                .expression(StringLiteral.class, new StringLiteralRule())
+                .expression(Identifier.class, new IdentifierRule())
+                .expression(BinaryExpression.class, new BinaryExpressionRule())
+                .expression(UnaryExpression.class, new UnaryExpressionRule());
     }
 }

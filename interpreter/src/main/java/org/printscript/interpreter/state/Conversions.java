@@ -1,4 +1,4 @@
-package org.printscript.interpreter;
+package org.printscript.interpreter.state;
 
 import java.util.regex.Pattern;
 import org.printscript.common.Failure;
@@ -7,13 +7,13 @@ import org.printscript.common.Result;
 import org.printscript.common.Success;
 
 // lleva un valor al tipo con el que se declaró la variable
-final class Conversions {
+public final class Conversions {
 
     private static final Pattern NUMBER = Pattern.compile("-?\\d+(\\.\\d+)?");
 
     private Conversions() {}
 
-    static Result<Object> toDeclaredType(String declaredType, Object value, Range range) {
+    public static Result<Object> toDeclaredType(String declaredType, Object value, Range range) {
         if (!(value instanceof String text)) {
             return new Success<>(value);
         }
