@@ -8,6 +8,10 @@ import org.printscript.token.Token;
 // enforce-spacing-after-colon-in-declaration
 public record SpaceAfterColon() implements FormatRule, ActiveRule {
 
+    public static final RuleDefinition DEFINITION =
+            RuleDefinition.flag(
+                    "enforce-spacing-after-colon-in-declaration", 60, new SpaceAfterColon());
+
     @Override
     public ActiveRule start() {
         return this;

@@ -6,6 +6,9 @@ import java.util.Optional;
 // solo la sangría de las líneas que ya empiezan.
 public record IfIndent(int size) implements FormatRule, ActiveRule {
 
+    public static final RuleDefinition DEFINITION =
+            RuleDefinition.count("indent-inside-if", 90, IfIndent::new);
+
     @Override
     public void validate() {
         FormatRule.requireNotNegative(size);

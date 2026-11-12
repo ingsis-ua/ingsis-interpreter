@@ -9,6 +9,9 @@ import org.printscript.token.Token;
 // line-breaks-after-println: cuántas líneas en blanco van después de un println
 public record PrintlnBreaks(int howMany) implements FormatRule {
 
+    public static final RuleDefinition DEFINITION =
+            RuleDefinition.count("line-breaks-after-println", 10, PrintlnBreaks::new);
+
     @Override
     public void validate() {
         FormatRule.requireNotNegative(howMany);

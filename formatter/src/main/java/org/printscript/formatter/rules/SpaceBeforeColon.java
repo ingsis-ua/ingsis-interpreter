@@ -8,6 +8,10 @@ import org.printscript.token.Token;
 // enforce-spacing-before-colon-in-declaration
 public record SpaceBeforeColon() implements FormatRule, ActiveRule {
 
+    public static final RuleDefinition DEFINITION =
+            RuleDefinition.flag(
+                    "enforce-spacing-before-colon-in-declaration", 50, new SpaceBeforeColon());
+
     @Override
     public ActiveRule start() {
         return this;

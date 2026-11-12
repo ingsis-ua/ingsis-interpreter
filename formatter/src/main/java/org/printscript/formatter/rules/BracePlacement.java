@@ -8,6 +8,10 @@ import org.printscript.token.Token;
 // if-brace-same-line / if-brace-below-line: dónde va la llave que abre el bloque
 public record BracePlacement(boolean sameLine) implements FormatRule, ActiveRule {
 
+    public static final RuleDefinition DEFINITION =
+            RuleDefinition.either(
+                    "if-brace-same-line", "if-brace-below-line", 30, BracePlacement::new);
+
     @Override
     public ActiveRule start() {
         return this;

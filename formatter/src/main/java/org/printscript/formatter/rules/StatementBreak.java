@@ -9,6 +9,9 @@ import org.printscript.token.Token;
 // mandatory-line-break-after-statement: una sentencia por línea
 public record StatementBreak() implements FormatRule, ActiveRule {
 
+    public static final RuleDefinition DEFINITION =
+            RuleDefinition.flag("mandatory-line-break-after-statement", 20, new StatementBreak());
+
     @Override
     public ActiveRule start() {
         return this;

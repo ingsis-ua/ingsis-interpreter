@@ -10,6 +10,9 @@ import org.printscript.token.Token;
 // queda contra lo que cierra
 public record SingleSpace() implements FormatRule {
 
+    public static final RuleDefinition DEFINITION =
+            RuleDefinition.flag("mandatory-single-space-separation", 80, new SingleSpace());
+
     @Override
     public ActiveRule start() {
         return new Active();

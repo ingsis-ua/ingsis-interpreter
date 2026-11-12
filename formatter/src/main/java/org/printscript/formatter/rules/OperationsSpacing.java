@@ -8,6 +8,10 @@ import org.printscript.token.Token;
 // mandatory-space-surrounding-operations: un espacio a cada lado de + - * /
 public record OperationsSpacing() implements FormatRule {
 
+    public static final RuleDefinition DEFINITION =
+            RuleDefinition.flag(
+                    "mandatory-space-surrounding-operations", 70, new OperationsSpacing());
+
     @Override
     public ActiveRule start() {
         return new Active();
