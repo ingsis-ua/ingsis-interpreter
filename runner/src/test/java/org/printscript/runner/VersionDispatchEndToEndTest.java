@@ -5,11 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.printscript.common.Failure;
 import org.printscript.common.Version;
-import org.printscript.linter.config.IdentifierFormat;
 import org.printscript.linter.config.LinterConfiguration;
 import org.printscript.runtime.OutputPrinter;
 
@@ -76,8 +74,7 @@ class VersionDispatchEndToEndTest {
 
     @Test
     void analyzingGivesTheSameReportInBothVersions() {
-        LinterConfiguration configuration =
-                new LinterConfiguration(Optional.of(IdentifierFormat.CAMEL_CASE), true, false);
+        LinterConfiguration configuration = LinterStyles.camelCaseYPrintln();
 
         AnalysisReport v10 =
                 new AnalyzingRunner()

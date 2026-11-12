@@ -5,11 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.io.StringWriter;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.printscript.common.Failure;
-import org.printscript.linter.config.IdentifierFormat;
-import org.printscript.linter.config.LinterConfiguration;
 import org.printscript.runtime.OutputPrinter;
 
 // El formatter y el linter no pasan por semantic a propósito: se tiene que poder
@@ -44,10 +41,7 @@ class ToolsToleratesTypeErrorsEndToEndTest {
     void lintingStillWorksOnAProgramWithTypeErrors() {
         AnalysisReport report =
                 new AnalyzingRunner()
-                        .analyze(
-                                List.of(TYPE_ERROR).iterator(),
-                                new LinterConfiguration(
-                                        Optional.of(IdentifierFormat.CAMEL_CASE), true, false));
+                        .analyze(List.of(TYPE_ERROR).iterator(), LinterStyles.camelCaseYPrintln());
 
         assertEquals(List.of(), report.failures());
         // el nombre en snake case sí se reporta: el linter hace su trabajo igual

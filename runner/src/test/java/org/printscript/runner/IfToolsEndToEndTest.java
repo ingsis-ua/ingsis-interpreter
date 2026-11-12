@@ -4,13 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.StringWriter;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.printscript.common.Version;
 import org.printscript.formatter.config.FormatterConfiguration;
 import org.printscript.linter.Violation;
-import org.printscript.linter.config.IdentifierFormat;
-import org.printscript.linter.config.LinterConfiguration;
 
 // el formatter y el linter sobre las construcciones de 1.1
 class IfToolsEndToEndTest {
@@ -33,11 +30,7 @@ class IfToolsEndToEndTest {
 
     private static List<Violation> lint(String... lines) {
         return new AnalyzingRunner()
-                .analyze(
-                        List.of(lines).iterator(),
-                        new LinterConfiguration(
-                                Optional.of(IdentifierFormat.CAMEL_CASE), true, false),
-                        Version.V11)
+                .analyze(List.of(lines).iterator(), LinterStyles.camelCaseYPrintln(), Version.V11)
                 .violations();
     }
 

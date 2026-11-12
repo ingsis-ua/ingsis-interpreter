@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.printscript.ast.BinaryExpression;
 import org.printscript.ast.Identifier;
@@ -19,13 +19,22 @@ import org.printscript.common.Position;
 import org.printscript.common.Range;
 import org.printscript.common.Result;
 import org.printscript.common.Success;
-import org.printscript.linter.config.IdentifierFormat;
+import org.printscript.config.RulesConfiguration;
 import org.printscript.linter.config.LinterConfiguration;
 
 class LinterFactoryTest {
 
     private static final Range ANY = new Range(new Position(1, 1), new Position(1, 1));
     private static final String MAL = "mal_escrito";
+    private static final String FORMAT = "identifier_format";
+    private static final String CAMEL = "camel case";
+    private static final String PRINTLN = "mandatory-variable-or-literal-in-println";
+    private static final String READ_INPUT = "mandatory-variable-or-literal-in-readInput";
+
+    // la configuración con las mismas claves que escribiría el usuario en su archivo
+    private static LinterConfiguration config(Map<String, Object> rules) {
+        return LinterConfiguration.from(new RulesConfiguration(rules));
+    }
 
     private static final class OneStatement implements Iterator<Result<Statement>> {
 
@@ -65,15 +74,14 @@ class LinterFactoryTest {
 
     @Test
     void withEverythingOffNothingIsReported() {
-        LinterConfiguration config = new LinterConfiguration(Optional.empty(), false, false);
+        LinterConfiguration config = config(Map.of());
 
         assertTrue(violationsOf(printlnOfASum(MAL), config).isEmpty());
     }
 
     @Test
     void withOnlyTheFormatRuleOnOnlyTheIdentifierIsReported() {
-        LinterConfiguration config =
-                new LinterConfiguration(Optional.of(IdentifierFormat.CAMEL_CASE), false, false);
+        LinterConfiguration config = config(Map.of(FORMAT, CAMEL));
 
         List<Violation> violations = violationsOf(printlnOfASum(MAL), config);
 
@@ -83,7 +91,7 @@ class LinterFactoryTest {
 
     @Test
     void withOnlyThePrintlnRuleOnOnlyTheArgumentIsReported() {
-        LinterConfiguration config = new LinterConfiguration(Optional.empty(), true, false);
+        LinterConfiguration config = config(Map.of(PRINTLN, true));
 
         List<Violation> violations = violationsOf(printlnOfASum(MAL), config);
 
@@ -93,16 +101,14 @@ class LinterFactoryTest {
 
     @Test
     void withBothRulesOnBothAreReported() {
-        LinterConfiguration config =
-                new LinterConfiguration(Optional.of(IdentifierFormat.CAMEL_CASE), true, false);
+        LinterConfiguration config = config(Map.of(FORMAT, CAMEL, PRINTLN, true));
 
         assertEquals(2, violationsOf(printlnOfASum(MAL), config).size());
     }
 
     @Test
     void aCleanStatementIsReportedCleanWithEveryRuleOn() {
-        LinterConfiguration config =
-                new LinterConfiguration(Optional.of(IdentifierFormat.CAMEL_CASE), true, false);
+        LinterConfiguration config = config(Map.of(FORMAT, CAMEL, PRINTLN, true));
         Statement println = new PrintlnStatement(new Identifier("bienEscrito", ANY), ANY);
 
         assertTrue(violationsOf(println, config).isEmpty());
@@ -112,10 +118,8 @@ class LinterFactoryTest {
     // comprobar que la factory elige el checker que corresponde y no siempre el mismo
     @Test
     void snakeCaseProducesItsOwnChecker() {
-        LinterConfiguration snake =
-                new LinterConfiguration(Optional.of(IdentifierFormat.SNAKE_CASE), false, false);
-        LinterConfiguration camel =
-                new LinterConfiguration(Optional.of(IdentifierFormat.CAMEL_CASE), false, false);
+        LinterConfiguration snake = config(Map.of(FORMAT, "snake case"));
+        LinterConfiguration camel = config(Map.of(FORMAT, CAMEL));
 
         assertEquals(List.of(), violationsOf(printlnOfASum(MAL), snake));
         assertEquals(1, violationsOf(printlnOfASum(MAL), camel).size());
@@ -134,8 +138,8 @@ class LinterFactoryTest {
                                 ANY),
                         ANY);
 
-        LinterConfiguration encendida = new LinterConfiguration(Optional.empty(), false, true);
-        LinterConfiguration apagada = new LinterConfiguration(Optional.empty(), false, false);
+        LinterConfiguration encendida = config(Map.of(READ_INPUT, true));
+        LinterConfiguration apagada = config(Map.of());
 
         assertEquals(1, violationsOf(statement, encendida).size());
         assertEquals(List.of(), violationsOf(statement, apagada));
