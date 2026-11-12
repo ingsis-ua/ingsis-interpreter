@@ -2,44 +2,14 @@ package org.printscript.interpreter;
 
 import java.util.Set;
 import java.util.function.Predicate;
-import org.printscript.ast.AssignmentStatement;
-import org.printscript.ast.BinaryExpression;
-import org.printscript.ast.Block;
-import org.printscript.ast.BooleanLiteral;
-import org.printscript.ast.ConstDeclaration;
 import org.printscript.ast.Expression;
-import org.printscript.ast.Identifier;
-import org.printscript.ast.IfStatement;
-import org.printscript.ast.NumberLiteral;
-import org.printscript.ast.PrintlnStatement;
-import org.printscript.ast.ReadEnv;
-import org.printscript.ast.ReadInput;
 import org.printscript.ast.Statement;
-import org.printscript.ast.StringLiteral;
-import org.printscript.ast.UnaryExpression;
-import org.printscript.ast.VariableDeclaration;
 import org.printscript.common.Result;
 import org.printscript.common.Version;
 import org.printscript.interpreter.engine.Execution;
 import org.printscript.interpreter.engine.Executor;
 import org.printscript.interpreter.engine.ExpressionEvaluator;
-import org.printscript.interpreter.engine.ExpressionRule;
 import org.printscript.interpreter.engine.NodeRules;
-import org.printscript.interpreter.engine.StatementRule;
-import org.printscript.interpreter.rules.expressions.BinaryExpressionRule;
-import org.printscript.interpreter.rules.expressions.BooleanLiteralRule;
-import org.printscript.interpreter.rules.expressions.IdentifierRule;
-import org.printscript.interpreter.rules.expressions.NumberLiteralRule;
-import org.printscript.interpreter.rules.expressions.ReadEnvRule;
-import org.printscript.interpreter.rules.expressions.ReadInputRule;
-import org.printscript.interpreter.rules.expressions.StringLiteralRule;
-import org.printscript.interpreter.rules.expressions.UnaryExpressionRule;
-import org.printscript.interpreter.rules.statements.AssignmentRule;
-import org.printscript.interpreter.rules.statements.BlockRule;
-import org.printscript.interpreter.rules.statements.ConstDeclarationRule;
-import org.printscript.interpreter.rules.statements.IfRule;
-import org.printscript.interpreter.rules.statements.PrintlnRule;
-import org.printscript.interpreter.rules.statements.VariableDeclarationRule;
 import org.printscript.interpreter.state.Environment;
 import org.printscript.runtime.RuntimePorts;
 
@@ -79,42 +49,9 @@ public final class Run {
         return rules(included::contains);
     }
 
+    // se filtra el registro real de la factory: un nodo nuevo registrado ahí aparece acá
+    // sin tocar este helper
     private static NodeRules rules(Predicate<Class<?>> keep) {
-        NodeRules.Builder builder = NodeRules.builder();
-        statement(builder, keep, VariableDeclaration.class, new VariableDeclarationRule());
-        statement(builder, keep, ConstDeclaration.class, new ConstDeclarationRule());
-        statement(builder, keep, AssignmentStatement.class, new AssignmentRule());
-        statement(builder, keep, PrintlnStatement.class, new PrintlnRule());
-        statement(builder, keep, Block.class, new BlockRule());
-        statement(builder, keep, IfStatement.class, new IfRule());
-        expression(builder, keep, NumberLiteral.class, new NumberLiteralRule());
-        expression(builder, keep, StringLiteral.class, new StringLiteralRule());
-        expression(builder, keep, BooleanLiteral.class, new BooleanLiteralRule());
-        expression(builder, keep, Identifier.class, new IdentifierRule());
-        expression(builder, keep, BinaryExpression.class, new BinaryExpressionRule());
-        expression(builder, keep, UnaryExpression.class, new UnaryExpressionRule());
-        expression(builder, keep, ReadInput.class, new ReadInputRule());
-        expression(builder, keep, ReadEnv.class, new ReadEnvRule());
-        return builder.build();
-    }
-
-    private static <S extends Statement> void statement(
-            NodeRules.Builder builder,
-            Predicate<Class<?>> keep,
-            Class<S> type,
-            StatementRule<S> rule) {
-        if (keep.test(type)) {
-            builder.statement(type, rule);
-        }
-    }
-
-    private static <E extends Expression> void expression(
-            NodeRules.Builder builder,
-            Predicate<Class<?>> keep,
-            Class<E> type,
-            ExpressionRule<E> rule) {
-        if (keep.test(type)) {
-            builder.expression(type, rule);
-        }
+        return InterpreterFactory.rules(Version.V11).only(keep);
     }
 }

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.printscript.ast.BinaryExpression;
+import org.printscript.ast.BooleanLiteral;
 import org.printscript.ast.Expression;
 import org.printscript.ast.Identifier;
 import org.printscript.ast.NumberLiteral;
@@ -135,5 +136,22 @@ class ExpressionEvaluatorTest {
         assertEquals(range, failure.range());
         assertTrue(failure.message().contains("aplicar -"), failure.message());
         assertTrue(failure.message().contains("string"), failure.message());
+    }
+
+    @Test
+    void booleanLiteralsEvaluateToTheirValue() {
+        assertEquals(true, evaluate(new BooleanLiteral(true, ANY), new Environment()));
+        assertEquals(false, evaluate(new BooleanLiteral(false, ANY), new Environment()));
+    }
+
+    // semantic lo rechaza antes, pero el intérprete no puede quedarse mudo si le llega
+    // igual: la red de seguridad tiene que nombrar el tipo correcto
+    @Test
+    void anOperationOverABooleanNamesTheTypeInTheMessage() {
+        Expression expression = binary(new BooleanLiteral(true, ANY), Operator.MINUS, number(1));
+
+        assertEquals(
+                "No se puede aplicar - entre boolean y number",
+                evaluateFailing(expression, new Environment()).message());
     }
 }

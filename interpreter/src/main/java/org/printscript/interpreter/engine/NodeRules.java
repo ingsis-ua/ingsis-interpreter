@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import org.printscript.ast.Expression;
 import org.printscript.ast.Statement;
 import org.printscript.common.Failure;
@@ -56,6 +57,22 @@ public final class NodeRules {
                             .orElseGet(List::of);
             default -> List.of();
         };
+    }
+
+    // el mismo registro con solo las reglas de los nodos que pasan el filtro
+    public NodeRules only(Predicate<Class<?>> keep) {
+        return new NodeRules(filtered(statements, keep), filtered(expressions, keep));
+    }
+
+    private static <V> Map<Class<?>, V> filtered(Map<Class<?>, V> rules, Predicate<Class<?>> keep) {
+        Map<Class<?>, V> kept = new HashMap<>();
+        rules.forEach(
+                (type, rule) -> {
+                    if (keep.test(type)) {
+                        kept.put(type, rule);
+                    }
+                });
+        return kept;
     }
 
     public static <T> Failure<T> unsupported(Object node, Range range) {

@@ -118,4 +118,13 @@ class NodeRulesTest {
         assertEquals("Nodo NumberLiteral no soportado por PrintScript", failure.message());
         assertEquals(RANGE, failure.range());
     }
+
+    @Test
+    void onlyKeepsTheRulesOfTheChosenNodes() {
+        NodeRules only = rules().only(type -> type == PrintlnStatement.class);
+
+        assertTrue(only.supports(PrintlnStatement.class));
+        assertFalse(only.supports(BinaryExpression.class));
+        assertTrue(rules().supports(BinaryExpression.class));
+    }
 }

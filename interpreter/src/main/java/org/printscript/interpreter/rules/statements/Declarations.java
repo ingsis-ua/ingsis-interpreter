@@ -58,11 +58,7 @@ final class Declarations {
         return execution
                 .environment()
                 .declare(name, declaredType, value, immutable)
-                .<Result<Void>>map(
-                        updated -> {
-                            execution.update(updated);
-                            return new Success<>(null);
-                        })
+                .map(execution::commit)
                 .orElseGet(() -> new Failure<>("Variable ya declarada: " + name, range));
     }
 }

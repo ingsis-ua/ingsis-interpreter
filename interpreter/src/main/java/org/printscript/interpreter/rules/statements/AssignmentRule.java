@@ -5,7 +5,6 @@ import java.util.Optional;
 import org.printscript.ast.AssignmentStatement;
 import org.printscript.common.Failure;
 import org.printscript.common.Result;
-import org.printscript.common.Success;
 import org.printscript.interpreter.engine.Execution;
 import org.printscript.interpreter.engine.StatementRule;
 import org.printscript.interpreter.state.Conversions;
@@ -45,11 +44,7 @@ public final class AssignmentRule implements StatementRule<AssignmentStatement> 
         return execution
                 .environment()
                 .assign(name, value)
-                .<Result<Void>>map(
-                        updated -> {
-                            execution.update(updated);
-                            return new Success<>(null);
-                        })
+                .map(execution::commit)
                 .orElseGet(() -> rejected(assignment, execution));
     }
 

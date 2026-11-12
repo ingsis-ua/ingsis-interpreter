@@ -3,6 +3,7 @@ package org.printscript.interpreter.engine;
 import org.printscript.ast.Expression;
 import org.printscript.ast.Statement;
 import org.printscript.common.Result;
+import org.printscript.common.Success;
 import org.printscript.interpreter.state.Environment;
 import org.printscript.runtime.RuntimePorts;
 
@@ -33,6 +34,13 @@ public final class Execution {
     // Environment es inmutable: declarar, asignar o abrir un scope devuelve uno nuevo
     public void update(Environment updated) {
         this.current = updated;
+    }
+
+    // deja un cambio de variables y da por buena la sentencia; es la única forma en
+    // que una regla guarda lo que declaró o asignó
+    public Result<Void> commit(Environment updated) {
+        this.current = updated;
+        return new Success<>(null);
     }
 
     public RuntimePorts ports() {
