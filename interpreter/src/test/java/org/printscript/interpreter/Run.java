@@ -20,39 +20,61 @@ import org.printscript.ast.UnaryExpression;
 import org.printscript.ast.VariableDeclaration;
 import org.printscript.common.Result;
 import org.printscript.common.Version;
+import org.printscript.interpreter.engine.Execution;
+import org.printscript.interpreter.engine.Executor;
+import org.printscript.interpreter.engine.ExpressionEvaluator;
+import org.printscript.interpreter.engine.ExpressionRule;
+import org.printscript.interpreter.engine.NodeRules;
+import org.printscript.interpreter.engine.StatementRule;
+import org.printscript.interpreter.rules.expressions.BinaryExpressionRule;
+import org.printscript.interpreter.rules.expressions.BooleanLiteralRule;
+import org.printscript.interpreter.rules.expressions.IdentifierRule;
+import org.printscript.interpreter.rules.expressions.NumberLiteralRule;
+import org.printscript.interpreter.rules.expressions.ReadEnvRule;
+import org.printscript.interpreter.rules.expressions.ReadInputRule;
+import org.printscript.interpreter.rules.expressions.StringLiteralRule;
+import org.printscript.interpreter.rules.expressions.UnaryExpressionRule;
+import org.printscript.interpreter.rules.statements.AssignmentRule;
+import org.printscript.interpreter.rules.statements.BlockRule;
+import org.printscript.interpreter.rules.statements.ConstDeclarationRule;
+import org.printscript.interpreter.rules.statements.IfRule;
+import org.printscript.interpreter.rules.statements.PrintlnRule;
+import org.printscript.interpreter.rules.statements.VariableDeclarationRule;
+import org.printscript.interpreter.state.Environment;
 import org.printscript.runtime.RuntimePorts;
 
 // arma ejecuciones para los tests sin pasar por el pipeline entero
-final class Run {
+public final class Run {
 
     private Run() {}
 
-    static Execution execution(Environment environment, RuntimePorts ports) {
+    public static Execution execution(Environment environment, RuntimePorts ports) {
         return execution(InterpreterFactory.rules(Version.V11), environment, ports);
     }
 
-    static Execution execution(NodeRules rules, Environment environment, RuntimePorts ports) {
+    public static Execution execution(
+            NodeRules rules, Environment environment, RuntimePorts ports) {
         return new Execution(
                 environment, ports, new Executor(rules), new ExpressionEvaluator(rules));
     }
 
-    static Result<Void> statement(Statement statement, RuntimePorts ports) {
+    public static Result<Void> statement(Statement statement, RuntimePorts ports) {
         return execution(new Environment(), ports).execute(statement);
     }
 
-    static Result<Object> expression(
+    public static Result<Object> expression(
             Expression expression, Environment environment, RuntimePorts ports) {
         return execution(environment, ports).evaluate(expression);
     }
 
     // todas las reglas de 1.1 salvo las de estos nodos
-    static NodeRules rulesWithout(Class<?>... excluded) {
+    public static NodeRules rulesWithout(Class<?>... excluded) {
         Set<Class<?>> skipped = Set.of(excluded);
         return rules(type -> !skipped.contains(type));
     }
 
     // solo las reglas de estos nodos
-    static NodeRules rulesOnly(Class<?>... kept) {
+    public static NodeRules rulesOnly(Class<?>... kept) {
         Set<Class<?>> included = Set.of(kept);
         return rules(included::contains);
     }

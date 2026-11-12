@@ -23,6 +23,7 @@ import org.printscript.ast.StringLiteral;
 import org.printscript.ast.UnaryExpression;
 import org.printscript.ast.VariableDeclaration;
 import org.printscript.common.Version;
+import org.printscript.interpreter.engine.NodeRules;
 
 // con el visitor, olvidarse de ejecutar un nodo nuevo era un error de compilación; con el
 // registro sería una falla en ejecución. Este test lo vuelve a atrapar antes: un nodo

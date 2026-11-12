@@ -6,6 +6,12 @@ import org.printscript.ast.Statement;
 import org.printscript.common.Failure;
 import org.printscript.common.Result;
 import org.printscript.common.Success;
+import org.printscript.interpreter.engine.Execution;
+import org.printscript.interpreter.engine.Executor;
+import org.printscript.interpreter.engine.ExpressionEvaluator;
+import org.printscript.interpreter.engine.NodeGate;
+import org.printscript.interpreter.engine.NodeRules;
+import org.printscript.interpreter.state.Environment;
 import org.printscript.runtime.RuntimePorts;
 
 // recibe el flujo de sentencias del parser y ejecuta una por vez
