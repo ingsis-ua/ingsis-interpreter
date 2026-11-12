@@ -144,4 +144,35 @@ class LinterFactoryTest {
         assertEquals(1, violationsOf(statement, encendida).size());
         assertEquals(List.of(), violationsOf(statement, apagada));
     }
+
+    // todas las violaciones caen en la misma posición: el desempate sigue el orden de las
+    // reglas (formato de identificador, println, readInput)
+    @Test
+    void violationsAtTheSamePositionFollowTheOrderOfTheRules() {
+        Statement statement =
+                new PrintlnStatement(
+                        new ReadInput(
+                                new BinaryExpression(
+                                        new Identifier(MAL, ANY),
+                                        Operator.PLUS,
+                                        new StringLiteral("b", ANY),
+                                        ANY),
+                                ANY),
+                        ANY);
+
+        List<String> messages =
+                violationsOf(
+                                statement,
+                                config(Map.of(FORMAT, CAMEL, PRINTLN, true, READ_INPUT, true)))
+                        .stream()
+                        .map(Violation::message)
+                        .toList();
+
+        assertEquals(
+                List.of(
+                        "El identificador '" + MAL + "' debe estar escrito en camel case",
+                        "println solo puede llamarse con un identificador o un literal",
+                        "readInput solo puede llamarse con un identificador o un literal"),
+                messages);
+    }
 }
