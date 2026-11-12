@@ -1,68 +1,51 @@
 package org.printscript.runner;
 
-import java.util.Optional;
+import java.util.HashMap;
+import java.util.Map;
+import org.printscript.config.RulesConfiguration;
 import org.printscript.formatter.config.FormatterConfiguration;
 
 // Los estilos que usan los tests de punta a punta, nombrados una sola vez.
 //
 // El formatter solo toca lo que alguna regla pide, así que "el estilo de la consigna" es
-// la suma de las reglas que lo componen y no un valor por defecto escondido.
+// la suma de las reglas que lo componen y no un valor por defecto escondido. Se arman con
+// las mismas claves que escribiría el usuario en su archivo de reglas.
 final class FormatterStyles {
 
     private FormatterStyles() {}
 
     static FormatterConfiguration consigna() {
-        return new FormatterConfiguration(
-                Optional.of(true), // espacio alrededor del '='
-                false, // sin espacio antes del ':'
-                true, // espacio después del ':'
-                true, // espacio alrededor de + - * /
-                false,
-                true, // una sentencia por línea
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty());
+        return from(consignaRules());
     }
 
     // la regla mínima: solo el espacio alrededor del '='
     static FormatterConfiguration soloElEspacioDelIgual() {
-        return new FormatterConfiguration(
-                Optional.of(true),
-                false,
-                false,
-                false,
-                false,
-                false,
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty());
+        return from(Map.of("enforce-spacing-around-equals", true));
     }
 
     static FormatterConfiguration conSaltosDespuesDelPrintln(int howMany) {
-        FormatterConfiguration base = consigna();
-        return new FormatterConfiguration(
-                base.spacingAroundEquals(),
-                base.spacingBeforeColon(),
-                base.spacingAfterColon(),
-                base.spaceSurroundingOperations(),
-                base.singleSpaceSeparation(),
-                base.lineBreakAfterStatement(),
-                Optional.of(howMany),
-                Optional.empty(),
-                Optional.empty());
+        Map<String, Object> rules = consignaRules();
+        rules.put("line-breaks-after-println", howMany);
+        return from(rules);
     }
 
     static FormatterConfiguration consignaConBloques(int indent, boolean braceOnSameLine) {
-        FormatterConfiguration base = consigna();
-        return new FormatterConfiguration(
-                base.spacingAroundEquals(),
-                base.spacingBeforeColon(),
-                base.spacingAfterColon(),
-                base.spaceSurroundingOperations(),
-                base.singleSpaceSeparation(),
-                base.lineBreakAfterStatement(),
-                base.lineBreaksAfterPrintln(),
-                Optional.of(braceOnSameLine),
-                Optional.of(indent));
+        Map<String, Object> rules = consignaRules();
+        rules.put(braceOnSameLine ? "if-brace-same-line" : "if-brace-below-line", true);
+        rules.put("indent-inside-if", indent);
+        return from(rules);
+    }
+
+    private static Map<String, Object> consignaRules() {
+        Map<String, Object> rules = new HashMap<>();
+        rules.put("enforce-spacing-around-equals", true); // espacio alrededor del '='
+        rules.put("enforce-spacing-after-colon-in-declaration", true); // espacio después del ':'
+        rules.put("mandatory-space-surrounding-operations", true); // espacio alrededor de + - * /
+        rules.put("mandatory-line-break-after-statement", true); // una sentencia por línea
+        return rules;
+    }
+
+    private static FormatterConfiguration from(Map<String, Object> rules) {
+        return FormatterConfiguration.from(new RulesConfiguration(rules));
     }
 }
