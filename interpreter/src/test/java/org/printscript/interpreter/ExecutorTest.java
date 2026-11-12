@@ -59,18 +59,18 @@ class ExecutorTest {
                 range);
     }
 
-    private static Result<Void> run(Executor executor, Statement statement) {
-        return statement.accept(executor);
+    private static Result<Void> run(Execution executor, Statement statement) {
+        return executor.execute(statement);
     }
 
-    private static Failure<Void> runFailing(Executor executor, Statement statement) {
-        Result<Void> result = statement.accept(executor);
+    private static Failure<Void> runFailing(Execution executor, Statement statement) {
+        Result<Void> result = executor.execute(statement);
         return assertInstanceOf(Failure.class, result, String.valueOf(result));
     }
 
     private static List<String> printedBy(Statement... statements) {
         InMemoryPrinter printer = new InMemoryPrinter();
-        Executor executor = new Executor(new Environment(), Ports.of(printer));
+        Execution executor = Run.execution(new Environment(), Ports.of(printer));
         for (Statement statement : statements) {
             run(executor, statement);
         }
@@ -105,7 +105,7 @@ class ExecutorTest {
     @Test
     void redeclaringAVariableFailsWithTheRangeOfTheStatement() {
         Range second = rangeAt(2, 1, 2, 18);
-        Executor executor = new Executor(new Environment(), Ports.of(new InMemoryPrinter()));
+        Execution executor = Run.execution(new Environment(), Ports.of(new InMemoryPrinter()));
         run(executor, declaration("x", number(1), ANY));
 
         Failure<Void> failure = runFailing(executor, declaration("x", number(2), second));
@@ -117,7 +117,7 @@ class ExecutorTest {
     @Test
     void assigningToAnUndeclaredVariableFailsWithTheRangeOfTheStatement() {
         Range range = rangeAt(3, 1, 3, 7);
-        Executor executor = new Executor(new Environment(), Ports.of(new InMemoryPrinter()));
+        Execution executor = Run.execution(new Environment(), Ports.of(new InMemoryPrinter()));
 
         Failure<Void> failure =
                 runFailing(
@@ -126,5 +126,17 @@ class ExecutorTest {
 
         assertEquals(range, failure.range());
         assertTrue(failure.message().contains("y"), failure.message());
+    }
+
+    @Test
+    void usingAVariableWhoseDeclarationFailedNamesTheFailedDeclaration() {
+        Execution executor = Run.execution(new Environment(), Ports.of(new InMemoryPrinter()));
+        Expression byZero = new BinaryExpression(number(1), Operator.DIVIDE, number(0), ANY);
+        runFailing(executor, declaration("x", byZero, ANY));
+
+        Failure<Void> failure =
+                runFailing(executor, new PrintlnStatement(new Identifier("x", ANY), ANY));
+
+        assertEquals("La variable x no tiene valor porque su declaración falló", failure.message());
     }
 }

@@ -50,7 +50,7 @@ class ReadsTest {
     }
 
     private Result<Object> evaluate(Expression expression, RuntimePorts ports) {
-        return expression.accept(new ExpressionEvaluator(new Environment(), ports));
+        return Run.expression(expression, new Environment(), ports);
     }
 
     private static ReadInput readInput(String prompt) {
@@ -119,7 +119,7 @@ class ReadsTest {
                         new TypeName(type, RANGE),
                         Optional.of(initializer),
                         RANGE);
-        return declaration.accept(new Executor(new Environment(), ports));
+        return Run.statement(declaration, ports);
     }
 
     @Test
@@ -155,5 +155,15 @@ class ReadsTest {
         assertEquals("'abc' no es un number", number.message());
         assertEquals("'Si' no es un boolean", bool.message());
         assertEquals(RANGE, number.range());
+    }
+
+    @Test
+    void promptIsWrittenEvenWhenThereIsNoInput() {
+        Failure<?> failure =
+                assertInstanceOf(
+                        Failure.class, evaluate(readInput("Nombre:"), ports(List.of(), Map.of())));
+
+        assertEquals("No hay más entrada disponible para readInput", failure.message());
+        assertEquals(List.of("Nombre:"), written);
     }
 }

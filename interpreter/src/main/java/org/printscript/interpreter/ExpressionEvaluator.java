@@ -1,190 +1,22 @@
 package org.printscript.interpreter;
 
-import java.math.BigDecimal;
-import org.printscript.ast.BinaryExpression;
-import org.printscript.ast.BooleanLiteral;
-import org.printscript.ast.ExpressionOnlyVisitor;
-import org.printscript.ast.Identifier;
-import org.printscript.ast.NumberLiteral;
-import org.printscript.ast.Operator;
-import org.printscript.ast.ReadEnv;
-import org.printscript.ast.ReadInput;
-import org.printscript.ast.StringLiteral;
-import org.printscript.ast.UnaryExpression;
-import org.printscript.common.Failure;
-import org.printscript.common.Range;
+import org.printscript.ast.Expression;
 import org.printscript.common.Result;
-import org.printscript.common.Success;
-import org.printscript.runtime.RuntimePorts;
 
-// calcula cuánto vale una expresión, recorriendo su árbol
-public final class ExpressionEvaluator extends ExpressionOnlyVisitor<Result<Object>> {
+// calcula cuánto vale una expresión delegando en la regla registrada para su clase
+// no conoce ninguna expresión: agregar una es registrar su regla en InterpreterFactory,
+// y esta clase no cambia
+public final class ExpressionEvaluator {
 
-    private final Environment environment;
-    private final RuntimePorts ports;
+    private final NodeRules rules;
 
-    public ExpressionEvaluator(Environment environment, RuntimePorts ports) {
-        this.environment = environment;
-        this.ports = ports;
+    ExpressionEvaluator(NodeRules rules) {
+        this.rules = rules;
     }
 
-    @Override
-    public Result<Object> visitNumberLiteral(NumberLiteral numberLiteral) {
-        return new Success<>(numberLiteral.value());
-    }
-
-    @Override
-    public Result<Object> visitStringLiteral(StringLiteral stringLiteral) {
-        return new Success<>(stringLiteral.value());
-    }
-
-    @Override
-    public Result<Object> visitBooleanLiteral(BooleanLiteral booleanLiteral) {
-        return new Success<>(booleanLiteral.value());
-    }
-
-    // el prompt se escribe sin salto de línea, para que quede en la misma línea que lo
-    // que el usuario tipea
-    @Override
-    public Result<Object> visitReadInput(ReadInput readInput) {
-        return readInput
-                .prompt()
-                .accept(this)
-                .andThen(prompt -> readInputAfterPrompt(readInput, prompt));
-    }
-
-    private Result<Object> readInputAfterPrompt(ReadInput readInput, Object prompt) {
-        ports.printer().print(asText(prompt));
-        return ports.input()
-                .readLine()
-                .<Result<Object>>map(Success::new)
-                .orElseGet(
-                        () ->
-                                new Failure<>(
-                                        "No hay más entrada disponible para readInput",
-                                        readInput.range()));
-    }
-
-    @Override
-    public Result<Object> visitReadEnv(ReadEnv readEnv) {
-        return readEnv.name()
-                .accept(this)
-                .andThen(name -> readEnvironmentVariable(readEnv, asText(name)));
-    }
-
-    private Result<Object> readEnvironmentVariable(ReadEnv readEnv, String variable) {
-        return ports.env()
-                .read(variable)
-                .<Result<Object>>map(Success::new)
-                .orElseGet(
-                        () ->
-                                new Failure<>(
-                                        "La variable de entorno " + variable + " no está definida",
-                                        readEnv.range()));
-    }
-
-    private static Result<Object> valueOf(Identifier identifier, Variable variable) {
-        if (variable.value() == FailedDeclaration.INSTANCE) {
-            return new Failure<>(
-                    "La variable "
-                            + identifier.name()
-                            + " no tiene valor porque su declaración falló",
-                    identifier.range());
-        }
-        return new Success<>(variable.value());
-    }
-
-    @Override
-    public Result<Object> visitIdentifier(Identifier identifier) {
-        return environment
-                .read(identifier.name())
-                .<Result<Object>>map(variable -> valueOf(identifier, variable))
-                .orElseGet(
-                        () ->
-                                new Failure<>(
-                                        "Variable no declarada: " + identifier.name(),
-                                        identifier.range()));
-    }
-
-    @Override
-    public Result<Object> visitUnaryExpression(UnaryExpression unaryExpression) {
-        return unaryExpression
-                .operand()
-                .accept(this)
-                .andThen(value -> negate(value, unaryExpression));
-    }
-
-    private static Result<Object> negate(Object value, UnaryExpression expression) {
-        if (value instanceof Double number) {
-            return new Success<>(-number);
-        }
-        return new Failure<>(
-                "No se puede aplicar " + expression.operator().symbol() + " a " + typeOf(value),
-                expression.range());
-    }
-
-    @Override
-    public Result<Object> visitBinaryExpression(BinaryExpression binaryExpression) {
-        return binaryExpression
-                .left()
-                .accept(this)
-                .andThen(left -> evaluateRight(binaryExpression, left));
-    }
-
-    private Result<Object> evaluateRight(BinaryExpression expression, Object left) {
-        return expression
-                .right()
-                .accept(this)
-                .andThen(right -> combine(left, expression.operator(), right, expression.range()));
-    }
-
-    // pasa un número a texto
-    static String asText(Object value) {
-        if (value instanceof Double number && Double.isFinite(number)) {
-            return BigDecimal.valueOf(number).stripTrailingZeros().toPlainString();
-        }
-        return String.valueOf(value);
-    }
-
-    private static Result<Object> combine(
-            Object left, Operator operator, Object right, Range range) {
-        if (left instanceof Double leftNumber && right instanceof Double rightNumber) {
-            if (operator == Operator.DIVIDE && rightNumber == 0) {
-                return new Failure<>("División por cero", range);
-            }
-            return new Success<>(arithmetic(leftNumber, operator, rightNumber));
-        }
-        if (operator == Operator.PLUS && (left instanceof String || right instanceof String)) {
-            return new Success<>(asText(left) + asText(right));
-        }
-        return new Failure<>(
-                "No se puede aplicar "
-                        + operator.symbol()
-                        + " entre "
-                        + typeOf(left)
-                        + " y "
-                        + typeOf(right),
-                range);
-    }
-
-    private static double arithmetic(double left, Operator operator, double right) {
-        return switch (operator) {
-            case PLUS -> left + right;
-            case MINUS -> left - right;
-            case MULTIPLY -> left * right;
-            case DIVIDE -> left / right;
-        };
-    }
-
-    private static String typeOf(Object value) {
-        if (value instanceof String) {
-            return "string";
-        }
-        return value instanceof Boolean ? "boolean" : "number";
-    }
-
-    @Override
-    protected Result<Object> notAnExpression(Range range) {
-        return new Failure<>("No es una expresión evaluable", range);
+    Result<Object> evaluate(Expression expression, Execution execution) {
+        return rules.expressionRuleFor(expression)
+                .map(rule -> rule.evaluate(expression, execution))
+                .orElseGet(() -> NodeRules.unsupported(expression, expression.range()));
     }
 }

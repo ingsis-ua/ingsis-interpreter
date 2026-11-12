@@ -5,8 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.printscript.ast.AssignmentStatement;
 import org.printscript.ast.BinaryExpression;
@@ -27,36 +25,11 @@ import org.printscript.ast.VariableDeclaration;
 import org.printscript.common.Failure;
 import org.printscript.common.Position;
 import org.printscript.common.Range;
+import org.printscript.common.Version;
 
 class NodeGateTest {
 
     private static final Range ANY = new Range(new Position(1, 1), new Position(1, 1));
-
-    private static final Set<Class<?>> VERSION_10 =
-            Set.of(
-                    VariableDeclaration.class,
-                    AssignmentStatement.class,
-                    PrintlnStatement.class,
-                    NumberLiteral.class,
-                    StringLiteral.class,
-                    Identifier.class,
-                    BinaryExpression.class);
-
-    private static final Set<Class<?>> VERSION_11 =
-            Set.of(
-                    VariableDeclaration.class,
-                    AssignmentStatement.class,
-                    PrintlnStatement.class,
-                    NumberLiteral.class,
-                    StringLiteral.class,
-                    Identifier.class,
-                    BinaryExpression.class,
-                    ConstDeclaration.class,
-                    IfStatement.class,
-                    Block.class,
-                    BooleanLiteral.class,
-                    ReadInput.class,
-                    ReadEnv.class);
 
     private static Range at(int line) {
         return new Range(new Position(line, 1), new Position(line, 9));
@@ -97,22 +70,24 @@ class NodeGateTest {
 
     @Test
     void aVersionThatSupportsEveryNodeLetsTheWholeTreeThrough() {
-        assertEquals(Optional.empty(), new NodeGate(VERSION_11).check(everyNode()));
+        assertEquals(
+                Optional.empty(),
+                new NodeGate(InterpreterFactory.rules(Version.V11)).check(everyNode()));
     }
 
     @Test
     void theOutermostUnsupportedNodeIsTheOneReported() {
-        Failure<Void> failure = new NodeGate(VERSION_10).check(everyNode()).orElseThrow();
+        Failure<Void> failure =
+                new NodeGate(InterpreterFactory.rules(Version.V10))
+                        .check(everyNode())
+                        .orElseThrow();
 
         assertTrue(failure.message().contains("IfStatement"), failure.message());
     }
 
     @Test
     void anUnsupportedNodeDeepInsideABlockIsFoundWithItsRange() {
-        Set<Class<?>> withoutReadEnv =
-                VERSION_11.stream()
-                        .filter(node -> node != ReadEnv.class)
-                        .collect(Collectors.toSet());
+        NodeRules withoutReadEnv = Run.rulesWithout(ReadEnv.class);
 
         Failure<Void> failure = new NodeGate(withoutReadEnv).check(everyNode()).orElseThrow();
 
@@ -122,10 +97,7 @@ class NodeGateTest {
 
     @Test
     void theConditionIsCheckedBeforeTheBlocks() {
-        Set<Class<?>> withoutBooleans =
-                VERSION_11.stream()
-                        .filter(node -> node != BooleanLiteral.class)
-                        .collect(Collectors.toSet());
+        NodeRules withoutBooleans = Run.rulesWithout(BooleanLiteral.class);
 
         Failure<Void> failure = new NodeGate(withoutBooleans).check(everyNode()).orElseThrow();
 

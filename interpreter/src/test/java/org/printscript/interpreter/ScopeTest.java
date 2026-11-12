@@ -47,7 +47,7 @@ class ScopeTest {
                     printed.add(text);
                 }
             };
-    private final Executor executor = new Executor(new Environment(), Ports.of(printer));
+    private final Execution executor = Run.execution(new Environment(), Ports.of(printer));
 
     private static Statement declare(String name, Object value) {
         return new VariableDeclaration(
@@ -74,7 +74,7 @@ class ScopeTest {
     }
 
     private Result<Void> run(Statement statement) {
-        return statement.accept(executor);
+        return executor.execute(statement);
     }
 
     // --- Environment ---
@@ -226,5 +226,29 @@ class ScopeTest {
         assertEquals(
                 "No se puede reasignar la constante c",
                 assertInstanceOf(Failure.class, result).message());
+    }
+
+    @Test
+    void failingStatementInsideBlockStillClosesTheScope() {
+        Result<Void> inside = run(block(declare("y", 1), println(new Identifier("z", RANGE))));
+        Result<Void> outside = run(println(new Identifier("y", RANGE)));
+
+        assertEquals("Variable no declarada: z", assertInstanceOf(Failure.class, inside).message());
+        assertEquals(
+                "Variable no declarada: y", assertInstanceOf(Failure.class, outside).message());
+    }
+
+    @Test
+    void elseIfChainRunsOnlyTheFirstTrueBranch() {
+        run(
+                conditional(
+                        false,
+                        block(println(new StringLiteral("a", RANGE))),
+                        conditional(
+                                true,
+                                block(println(new StringLiteral("b", RANGE))),
+                                block(println(new StringLiteral("c", RANGE))))));
+
+        assertEquals(List.of("b"), printed);
     }
 }

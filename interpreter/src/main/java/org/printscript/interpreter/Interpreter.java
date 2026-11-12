@@ -2,32 +2,28 @@ package org.printscript.interpreter;
 
 import java.util.Iterator;
 import java.util.Optional;
-import java.util.Set;
 import org.printscript.ast.Statement;
 import org.printscript.common.Failure;
 import org.printscript.common.Result;
 import org.printscript.common.Success;
+import org.printscript.runtime.RuntimePorts;
 
-// recibe el flujo de sentencias del parser y por cada una llama al Executor
+// recibe el flujo de sentencias del parser y ejecuta una por vez
 public final class Interpreter implements Iterator<Result<?>> {
 
     private final Iterator<Result<Statement>> statements;
-    private final Executor executor;
-    private final Optional<NodeGate> gate;
+    private final Execution execution;
+    private final NodeGate gate;
 
-    public Interpreter(Iterator<Result<Statement>> statements, Executor executor) {
+    Interpreter(Iterator<Result<Statement>> statements, NodeRules rules, RuntimePorts ports) {
         this.statements = statements;
-        this.executor = executor;
-        this.gate = Optional.empty();
-    }
-
-    public Interpreter(
-            Iterator<Result<Statement>> statements,
-            Executor executor,
-            Set<Class<?>> supportedNodes) {
-        this.statements = statements;
-        this.executor = executor;
-        this.gate = Optional.of(new NodeGate(supportedNodes));
+        this.execution =
+                new Execution(
+                        new Environment(),
+                        ports,
+                        new Executor(rules),
+                        new ExpressionEvaluator(rules));
+        this.gate = new NodeGate(rules);
     }
 
     @Override
@@ -37,15 +33,15 @@ public final class Interpreter implements Iterator<Result<?>> {
 
     @Override
     public Result<?> next() {
-        Result<Statement> next = statements.next();
+        Result<Statement> next = statements.next(); // SemanticAnalyzer.next()
         if (next instanceof Failure<Statement>) {
             return next;
         }
         Statement statement = ((Success<Statement>) next).value();
-        Optional<Failure<Void>> rejected = gate.flatMap(nodes -> nodes.check(statement));
+        Optional<Failure<Void>> rejected = gate.check(statement);
         if (rejected.isPresent()) {
             return rejected.get();
         }
-        return statement.accept(executor);
+        return execution.execute(statement);
     }
 }

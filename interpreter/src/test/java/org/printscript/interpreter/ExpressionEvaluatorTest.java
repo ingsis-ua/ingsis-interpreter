@@ -23,8 +23,8 @@ class ExpressionEvaluatorTest {
 
     private static final Range ANY = rangeAt(1, 1, 1, 1);
 
-    private static ExpressionEvaluator newEvaluator(Environment environment) {
-        return new ExpressionEvaluator(
+    private static Execution newEvaluator(Environment environment) {
+        return Run.execution(
                 environment,
                 Ports.of(
                         new org.printscript.runtime.OutputPrinter() {
@@ -60,12 +60,12 @@ class ExpressionEvaluatorTest {
     }
 
     private static Object evaluate(Expression expression, Environment environment) {
-        Result<Object> result = expression.accept(newEvaluator(environment));
+        Result<Object> result = newEvaluator(environment).evaluate(expression);
         return assertInstanceOf(Success.class, result, String.valueOf(result)).value();
     }
 
     private static Failure<Object> evaluateFailing(Expression expression, Environment environment) {
-        Result<Object> result = expression.accept(newEvaluator(environment));
+        Result<Object> result = newEvaluator(environment).evaluate(expression);
         @SuppressWarnings("unchecked")
         Failure<Object> failure = assertInstanceOf(Failure.class, result, String.valueOf(result));
         return failure;

@@ -1,184 +1,22 @@
 package org.printscript.interpreter;
 
-import java.util.Optional;
-import org.printscript.ast.AssignmentStatement;
-import org.printscript.ast.Block;
-import org.printscript.ast.ConstDeclaration;
-import org.printscript.ast.Expression;
-import org.printscript.ast.IfStatement;
-import org.printscript.ast.PrintlnStatement;
 import org.printscript.ast.Statement;
-import org.printscript.ast.StatementOnlyVisitor;
-import org.printscript.ast.VariableDeclaration;
-import org.printscript.common.Failure;
-import org.printscript.common.Range;
 import org.printscript.common.Result;
-import org.printscript.common.Success;
-import org.printscript.runtime.RuntimePorts;
 
-// ejecuta las sentencias
-public final class Executor extends StatementOnlyVisitor<Result<Void>> {
+// ejecuta una sentencia delegando en la regla registrada para su clase
+// no conoce ninguna sentencia: agregar una es registrar su regla en InterpreterFactory,
+// y esta clase no cambia
+public final class Executor {
 
-    private final RuntimePorts ports;
-    private Environment environment;
+    private final NodeRules rules;
 
-    public Executor(Environment environment, RuntimePorts ports) {
-        this.environment = environment;
-        this.ports = ports;
+    Executor(NodeRules rules) {
+        this.rules = rules;
     }
 
-    @Override
-    public Result<Void> visitVariableDeclaration(VariableDeclaration variableDeclaration) {
-        return declare(
-                variableDeclaration.name().name(),
-                variableDeclaration.type().name(),
-                variableDeclaration.initializer(),
-                variableDeclaration.range(),
-                false);
-    }
-
-    @Override
-    public Result<Void> visitConstDeclaration(ConstDeclaration constDeclaration) {
-        return declare(
-                constDeclaration.name().name(),
-                constDeclaration.type().name(),
-                constDeclaration.initializer(),
-                constDeclaration.range(),
-                true);
-    }
-
-    @Override
-    public Result<Void> visitAssignmentStatement(AssignmentStatement assignmentStatement) {
-        return evaluate(assignmentStatement.expression())
-                .andThen(value -> assign(value, assignmentStatement));
-    }
-
-    private Result<Void> assign(Object value, AssignmentStatement assignmentStatement) {
-        String name = assignmentStatement.name().name();
-        Optional<Variable> existing = environment.read(name);
-        if (existing.isEmpty()) {
-            return new Failure<>("Variable no declarada: " + name, assignmentStatement.range());
-        }
-        // la conversión se aplica siempre; para cualquier inicializador que no sea una
-        // lectura externa es un no-op, porque semantic ya garantizó que el tipo coincide
-        return Conversions.toDeclaredType(
-                        existing.get().declaredType(),
-                        value,
-                        assignmentStatement.expression().range())
-                .andThen(converted -> store(name, converted, assignmentStatement));
-    }
-
-    private Result<Void> store(String name, Object value, AssignmentStatement assignmentStatement) {
-        return environment
-                .assign(name, value)
-                .<Result<Void>>map(this::commit)
-                .orElseGet(() -> rejectedAssignment(assignmentStatement));
-    }
-
-    // el frame se abre al entrar al bloque y se cierra al salir, también cuando una
-    // sentencia de adentro falló: es la misma regla y el mismo lugar que en semantic
-    @Override
-    public Result<Void> visitBlock(Block block) {
-        environment = environment.openScope();
-        try {
-            for (Statement statement : block.statements()) {
-                Result<Void> executed = statement.accept(this);
-                if (executed instanceof Failure<Void>) {
-                    return executed;
-                }
-            }
-            return new Success<>(null);
-        } finally {
-            environment = environment.closeScope();
-        }
-    }
-
-    @Override
-    public Result<Void> visitIfStatement(IfStatement ifStatement) {
-        return evaluate(ifStatement.condition())
-                .andThen(value -> executeConditionalBranch(ifStatement, value));
-    }
-
-    private Result<Void> executeConditionalBranch(IfStatement ifStatement, Object value) {
-        // semantic ya garantizó que es booleana; si igual no lo es, se falla de forma
-        // explícita en vez de elegir una rama por defecto y seguir como si nada
-        if (!(value instanceof Boolean taken)) {
-            return new Failure<>(
-                    "La condición de un if tiene que ser boolean", ifStatement.condition().range());
-        }
-        if (taken) {
-            return ifStatement.thenBlock().accept(this);
-        }
-        return ifStatement
-                .elseBranch()
-                .map(branch -> branch.accept(this))
-                .orElseGet(() -> new Success<>(null));
-    }
-
-    @Override
-    public Result<Void> visitPrintlnStatement(PrintlnStatement printlnStatement) {
-        return evaluate(printlnStatement.expression())
-                .map(
-                        value -> {
-                            ports.printer().println(ExpressionEvaluator.asText(value));
-                            return null;
-                        });
-    }
-
-    private Result<Object> evaluate(Expression expression) {
-        return expression.accept(new ExpressionEvaluator(environment, ports));
-    }
-
-    // evalúa el inicializador si lo hay y guarda la variable
-    private Result<Void> declare(
-            String name,
-            String declaredType,
-            Optional<Expression> initializer,
-            Range range,
-            boolean immutable) {
-        if (initializer.isEmpty()) {
-            return declareValue(name, declaredType, null, range, immutable);
-        }
-        Result<Object> value =
-                evaluate(initializer.get())
-                        .andThen(
-                                evaluated ->
-                                        Conversions.toDeclaredType(
-                                                declaredType,
-                                                evaluated,
-                                                initializer.get().range()));
-        if (value instanceof Failure<Object> failure) {
-            declareValue(name, declaredType, FailedDeclaration.INSTANCE, range, immutable);
-            return new Failure<>(failure.message(), failure.range());
-        }
-        return declareValue(
-                name, declaredType, ((Success<Object>) value).value(), range, immutable);
-    }
-
-    private Result<Void> declareValue(
-            String name, String declaredType, Object value, Range range, boolean immutable) {
-        return environment
-                .declare(name, declaredType, value, immutable)
-                .<Result<Void>>map(this::commit)
-                .orElseGet(() -> new Failure<>("Variable ya declarada: " + name, range));
-    }
-
-    // assign devuelve vacío por dos motivos distintos y el mensaje tiene que decir cuál
-    private Result<Void> rejectedAssignment(AssignmentStatement assignment) {
-        String name = assignment.name().name();
-        if (environment.read(name).isPresent()) {
-            return new Failure<>("No se puede reasignar la constante " + name, assignment.range());
-        }
-        return new Failure<>("Variable no declarada: " + name, assignment.range());
-    }
-
-    private Result<Void> commit(Environment updated) {
-        this.environment = updated;
-        return new Success<>(null);
-    }
-
-    @Override
-    protected Result<Void> notAStatement(Range range) {
-        return new Failure<>("No es una sentencia ejecutable", range);
+    Result<Void> execute(Statement statement, Execution execution) {
+        return rules.statementRuleFor(statement)
+                .map(rule -> rule.execute(statement, execution))
+                .orElseGet(() -> NodeRules.unsupported(statement, statement.range()));
     }
 }
