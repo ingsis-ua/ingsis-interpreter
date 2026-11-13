@@ -8,13 +8,17 @@ import org.printscript.linter.Violation;
 import org.printscript.linter.visitors.ReadInputCollector;
 
 // un identificador o un literal, nunca una expresión armada
-public final class ReadInputArgumentRule implements LintRule {
+public record ReadInputArgumentRule() implements LintRule {
 
-    private final ReadInputCollector collector = new ReadInputCollector();
+    public static final LintRuleDefinition DEFINITION =
+            LintRuleDefinition.flag(
+                    "mandatory-variable-or-literal-in-readInput", new ReadInputArgumentRule());
+
+    private static final ReadInputCollector COLLECTOR = new ReadInputCollector();
 
     @Override
     public List<Violation> check(Statement statement) {
-        return statement.accept(collector).stream()
+        return statement.accept(COLLECTOR).stream()
                 .map(ReadInput::prompt)
                 .filter(argument -> !SimpleArgument.test(argument))
                 .map(ReadInputArgumentRule::violationFor)

@@ -26,9 +26,7 @@ final class LintAnalysis {
             err.println("No se pudo leer la configuración: " + e.getMessage());
             return ExitCode.USAGE_ERROR;
         }
-        if (configuration.identifierFormat().isEmpty()
-                && !configuration.printlnOnlySimpleArgument()
-                && !configuration.readInputOnlySimpleArgument()) {
+        if (configuration.equals(LinterConfiguration.none())) {
             err.println(
                     "Aviso: no hay reglas de lint activas; solo se revisa la sintaxis. "
                             + "Usá --config para activar reglas.");
