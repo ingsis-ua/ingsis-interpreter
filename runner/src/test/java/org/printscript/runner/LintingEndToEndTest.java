@@ -7,19 +7,16 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.printscript.common.Position;
 import org.printscript.common.Range;
 import org.printscript.common.Version;
 import org.printscript.linter.Violation;
-import org.printscript.linter.config.IdentifierFormat;
 import org.printscript.linter.config.LinterConfiguration;
 
 class LintingEndToEndTest {
 
-    private static final LinterConfiguration TODO_PRENDIDO =
-            new LinterConfiguration(Optional.of(IdentifierFormat.CAMEL_CASE), true, false);
+    private static final LinterConfiguration TODO_PRENDIDO = LinterStyles.camelCaseYPrintln();
 
     private static AnalysisReport analyze(LinterConfiguration configuration, String... lines) {
         return new AnalyzingRunner().analyze(List.of(lines).iterator(), configuration);
@@ -92,7 +89,7 @@ class LintingEndToEndTest {
 
     @Test
     void withTheRulesOffTheSameProgramIsClean() {
-        LinterConfiguration apagado = new LinterConfiguration(Optional.empty(), false, false);
+        LinterConfiguration apagado = LinterStyles.ninguna();
 
         AnalysisReport report =
                 analyze(apagado, "let user_name: string = \"Joe\";", "println(1 + 2);");

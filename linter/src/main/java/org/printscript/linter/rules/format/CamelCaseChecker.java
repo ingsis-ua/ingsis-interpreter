@@ -1,6 +1,8 @@
 package org.printscript.linter.rules.format;
 
-public final class CamelCaseChecker implements IdentifierFormatChecker {
+import java.util.List;
+
+public record CamelCaseChecker() implements IdentifierFormatChecker {
 
     @Override
     public boolean isValid(String name) {
@@ -12,5 +14,10 @@ public final class CamelCaseChecker implements IdentifierFormatChecker {
     @Override
     public String expectedFormat() {
         return "camel case";
+    }
+
+    @Override
+    public List<String> spellings() {
+        return List.of("camel case", "camelcase", "camel_case");
     }
 }

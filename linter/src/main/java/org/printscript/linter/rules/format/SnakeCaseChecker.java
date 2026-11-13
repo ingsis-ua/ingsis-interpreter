@@ -1,7 +1,9 @@
 package org.printscript.linter.rules.format;
 
+import java.util.List;
+
 // snake case: arranca en minúscula y solo admite minúsculas, dígitos y guión bajo
-public final class SnakeCaseChecker implements IdentifierFormatChecker {
+public record SnakeCaseChecker() implements IdentifierFormatChecker {
 
     @Override
     public boolean isValid(String name) {
@@ -18,5 +20,10 @@ public final class SnakeCaseChecker implements IdentifierFormatChecker {
     @Override
     public String expectedFormat() {
         return "snake case";
+    }
+
+    @Override
+    public List<String> spellings() {
+        return List.of("snake case", "snakecase", "snake_case");
     }
 }

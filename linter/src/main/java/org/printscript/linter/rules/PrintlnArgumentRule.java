@@ -8,15 +8,19 @@ import org.printscript.linter.Violation;
 import org.printscript.linter.visitors.PrintlnCollector;
 
 // println recibe un literal o un identificador, no una expresión
-public final class PrintlnArgumentRule implements LintRule {
+public record PrintlnArgumentRule() implements LintRule {
 
-    private final PrintlnCollector collector = new PrintlnCollector();
+    public static final LintRuleDefinition DEFINITION =
+            LintRuleDefinition.flag(
+                    "mandatory-variable-or-literal-in-println", new PrintlnArgumentRule());
+
+    private static final PrintlnCollector COLLECTOR = new PrintlnCollector();
 
     // recorre para encontrar también los println de adentro de un bloque, y reporta
     // todos los incumplimientos
     @Override
     public List<Violation> check(Statement statement) {
-        return statement.accept(collector).stream()
+        return statement.accept(COLLECTOR).stream()
                 .map(PrintlnStatement::expression)
                 .filter(argument -> !SimpleArgument.test(argument))
                 .map(PrintlnArgumentRule::violationFor)

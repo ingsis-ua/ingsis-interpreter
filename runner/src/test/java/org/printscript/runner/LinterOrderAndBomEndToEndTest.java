@@ -4,13 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.printscript.common.Failure;
 import org.printscript.common.Version;
 import org.printscript.linter.Violation;
-import org.printscript.linter.config.IdentifierFormat;
-import org.printscript.linter.config.LinterConfiguration;
 import org.printscript.runtime.OutputPrinter;
 
 class LinterOrderAndBomEndToEndTest {
@@ -27,8 +24,7 @@ class LinterOrderAndBomEndToEndTest {
                                                 "  let other_bad: number = 2;",
                                                 "}")
                                         .iterator(),
-                                new LinterConfiguration(
-                                        Optional.of(IdentifierFormat.CAMEL_CASE), true, false),
+                                LinterStyles.camelCaseYPrintln(),
                                 Version.V11);
 
         assertEquals(
