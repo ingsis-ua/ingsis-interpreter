@@ -1,4 +1,4 @@
-package org.printscript.linter.visitors;
+package org.printscript.linter.traversal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -36,7 +36,7 @@ class PrintlnCollectorTest {
     }
 
     private List<String> markersIn(Statement statement) {
-        return statement.accept(collector).stream()
+        return collector.collect(statement).stream()
                 .map(println -> ((StringLiteral) println.expression()).value())
                 .toList();
     }
@@ -97,21 +97,21 @@ class PrintlnCollectorTest {
 
     @Test
     void theExpressionsContributeNothingOnTheirOwn() {
-        assertEquals(List.of(), new NumberLiteral(1, RANGE).accept(collector));
-        assertEquals(List.of(), new StringLiteral("x", RANGE).accept(collector));
-        assertEquals(List.of(), new BooleanLiteral(true, RANGE).accept(collector));
-        assertEquals(List.of(), new Identifier("x", RANGE).accept(collector));
+        assertEquals(List.of(), collector.collect(new NumberLiteral(1, RANGE)));
+        assertEquals(List.of(), collector.collect(new StringLiteral("x", RANGE)));
+        assertEquals(List.of(), collector.collect(new BooleanLiteral(true, RANGE)));
+        assertEquals(List.of(), collector.collect(new Identifier("x", RANGE)));
         assertEquals(
                 List.of(),
-                new BinaryExpression(
+                collector.collect(
+                        new BinaryExpression(
                                 new NumberLiteral(1, RANGE),
                                 Operator.PLUS,
                                 new NumberLiteral(2, RANGE),
-                                RANGE)
-                        .accept(collector));
+                                RANGE)));
         assertEquals(
-                List.of(), new ReadInput(new StringLiteral("p", RANGE), RANGE).accept(collector));
+                List.of(), collector.collect(new ReadInput(new StringLiteral("p", RANGE), RANGE)));
         assertEquals(
-                List.of(), new ReadEnv(new StringLiteral("P", RANGE), RANGE).accept(collector));
+                List.of(), collector.collect(new ReadEnv(new StringLiteral("P", RANGE), RANGE)));
     }
 }

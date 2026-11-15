@@ -1,4 +1,4 @@
-package org.printscript.linter.visitors;
+package org.printscript.linter.traversal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -36,7 +36,7 @@ class IdentifierCollectorTest {
     }
 
     private List<String> namesIn(Statement statement) {
-        return statement.accept(collector).stream().map(Identifier::name).toList();
+        return collector.collect(statement).stream().map(Identifier::name).toList();
     }
 
     @Test
@@ -110,7 +110,7 @@ class IdentifierCollectorTest {
                 new AssignmentStatement(
                         new Identifier(TOTAL, nameRange), new Identifier(PRECIO, valueRange), ANY);
 
-        List<Identifier> collected = assignment.accept(collector);
+        List<Identifier> collected = collector.collect(assignment);
 
         assertEquals(nameRange, collected.get(0).range());
         assertEquals(valueRange, collected.get(1).range());

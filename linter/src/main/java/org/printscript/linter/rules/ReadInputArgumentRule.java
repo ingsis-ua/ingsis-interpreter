@@ -5,7 +5,7 @@ import org.printscript.ast.Expression;
 import org.printscript.ast.ReadInput;
 import org.printscript.ast.Statement;
 import org.printscript.linter.Violation;
-import org.printscript.linter.visitors.ReadInputCollector;
+import org.printscript.linter.traversal.ReadInputCollector;
 
 // un identificador o un literal, nunca una expresión armada
 public record ReadInputArgumentRule() implements LintRule {
@@ -18,7 +18,7 @@ public record ReadInputArgumentRule() implements LintRule {
 
     @Override
     public List<Violation> check(Statement statement) {
-        return statement.accept(COLLECTOR).stream()
+        return COLLECTOR.collect(statement).stream()
                 .map(ReadInput::prompt)
                 .filter(argument -> !SimpleArgument.test(argument))
                 .map(ReadInputArgumentRule::violationFor)

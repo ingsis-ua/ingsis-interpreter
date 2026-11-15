@@ -1,4 +1,4 @@
-package org.printscript.linter.visitors;
+package org.printscript.linter.traversal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -28,7 +28,7 @@ class ConstAndBooleanCollectionTest {
     private final IdentifierCollector collector = new IdentifierCollector();
 
     private List<String> namesIn(org.printscript.ast.Statement statement) {
-        return statement.accept(collector).stream().map(Identifier::name).toList();
+        return collector.collect(statement).stream().map(Identifier::name).toList();
     }
 
     @Test
