@@ -1,6 +1,7 @@
 package org.printscript.semantic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.printscript.semantic.Ast.assign;
 import static org.printscript.semantic.Ast.at;
 import static org.printscript.semantic.Ast.declare;
 import static org.printscript.semantic.Ast.name;
@@ -19,6 +20,8 @@ import org.printscript.common.Failure;
 import org.printscript.common.Range;
 
 class BlockFailuresTest {
+
+    private static final String NUMBER = "number";
 
     private final StatementChecker checker =
             new StatementChecker(Set.of(Type.NUMBER, Type.STRING, Type.BOOLEAN));
@@ -41,7 +44,7 @@ class BlockFailuresTest {
         Statement program =
                 conditional(
                         block(
-                                declare("a", "number", text("x", at(1, 29))),
+                                declare("a", NUMBER, text("x", at(1, 29))),
                                 declare("b", "string", number(5, at(1, 51))),
                                 println(name("zzz", at(1, 62)))),
                         null);
@@ -78,7 +81,7 @@ class BlockFailuresTest {
 
     @Test
     void aValidStatementHasNoFailures() {
-        assertEquals(List.of(), rangesOf(declare("ok", "number", number(1, Ast.ANY))));
+        assertEquals(List.of(), rangesOf(declare("ok", NUMBER, number(1, Ast.ANY))));
     }
 
     @Test
@@ -86,7 +89,7 @@ class BlockFailuresTest {
         checker.failuresOf(
                 conditional(
                         block(
-                                declare("interna", "number", number(1, Ast.ANY)),
+                                declare("interna", NUMBER, number(1, Ast.ANY)),
                                 println(name("uno", Ast.ANY)),
                                 println(name("dos", Ast.ANY))),
                         null));
@@ -94,6 +97,28 @@ class BlockFailuresTest {
         assertEquals(
                 List.of("Variable no declarada: interna"),
                 checker.failuresOf(println(name("interna", Ast.ANY))).stream()
+                        .map(Failure::message)
+                        .toList());
+    }
+
+    @Test
+    void failuresInThenAndElseComeInOrderWithTheirMessages() {
+        Statement program =
+                conditional(
+                        block(
+                                assign("x", Ast.ANY, number(1, Ast.ANY)),
+                                declare("y", NUMBER, text("s", Ast.ANY))),
+                        block(println(name("z", Ast.ANY))));
+
+        assertEquals(
+                List.of(
+                        "Variable no declarada: x",
+                        "No se puede asignar string a una variable number",
+                        "Variable no declarada: z"),
+                checker.failuresOf(program).stream().map(Failure::message).toList());
+        assertEquals(
+                List.of("Variable no declarada: y"),
+                checker.failuresOf(println(name("y", Ast.ANY))).stream()
                         .map(Failure::message)
                         .toList());
     }

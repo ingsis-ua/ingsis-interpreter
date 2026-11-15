@@ -12,6 +12,4 @@ public sealed interface Statement
                 IfStatement {
 
     Range range();
-
-    <T> T accept(ASTVisitor<T> visitor);
 }

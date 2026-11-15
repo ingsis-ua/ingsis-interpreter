@@ -84,4 +84,25 @@ class ReadInputArgumentRuleTest {
 
         assertEquals(List.of(), rule.check(statement));
     }
+
+    // el buscador no baja adentro de un readInput que ya encontró: el de adentro, con su
+    // prompt armado, no se reporta. Solo el de afuera, porque su prompt es otro readInput
+    @Test
+    void aNestedReadInputIsReportedOnlyOnTheOutside() {
+        Range inner = new Range(new Position(2, 5), new Position(2, 30));
+        ReadInput nested =
+                new ReadInput(
+                        new BinaryExpression(
+                                new StringLiteral("a", R),
+                                Operator.PLUS,
+                                new StringLiteral("b", R),
+                                R),
+                        inner);
+        Statement statement = new PrintlnStatement(readOf(nested), R);
+
+        List<Violation> violations = rule.check(statement);
+
+        assertEquals(1, violations.size());
+        assertEquals(inner, violations.get(0).range());
+    }
 }

@@ -32,7 +32,7 @@ class ScopeTest {
             new StatementChecker(Set.of(Type.NUMBER, Type.STRING, Type.BOOLEAN));
 
     private Result<Void> check(Statement statement) {
-        return statement.accept(checker);
+        return checker.check(statement);
     }
 
     private static Block block(Statement... statements) {

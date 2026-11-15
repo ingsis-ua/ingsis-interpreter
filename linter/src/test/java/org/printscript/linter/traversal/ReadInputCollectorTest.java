@@ -1,4 +1,4 @@
-package org.printscript.linter.visitors;
+package org.printscript.linter.traversal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -42,7 +42,7 @@ class ReadInputCollectorTest {
     }
 
     private int found(Statement statement) {
-        return statement.accept(collector).size();
+        return collector.collect(statement).size();
     }
 
     @Test

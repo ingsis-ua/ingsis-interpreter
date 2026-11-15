@@ -1,154 +1,19 @@
 package org.printscript.semantic;
 
-import java.util.Optional;
-import org.printscript.ast.BinaryExpression;
-import org.printscript.ast.BooleanLiteral;
+import java.util.EnumSet;
 import org.printscript.ast.Expression;
-import org.printscript.ast.ExpressionOnlyVisitor;
-import org.printscript.ast.Identifier;
-import org.printscript.ast.NumberLiteral;
-import org.printscript.ast.Operator;
-import org.printscript.ast.ReadEnv;
-import org.printscript.ast.ReadInput;
-import org.printscript.ast.StringLiteral;
-import org.printscript.ast.UnaryExpression;
-import org.printscript.common.Failure;
-import org.printscript.common.Range;
 import org.printscript.common.Result;
-import org.printscript.common.Success;
+import org.printscript.semantic.engine.Checking;
 
-// calcula qué tipo tiene una expresión, sin evaluarla
-// mira la tabla de tipos pero no la modifica
-final class ExpressionTyper extends ExpressionOnlyVisitor<Result<Type>> {
+// el tipo de una expresión suelta, con una tabla dada: para probar las reglas de
+// expresiones sin armar una sentencia alrededor
+final class ExpressionTyper {
 
-    private final SymbolTable symbols;
-
-    ExpressionTyper(SymbolTable symbols) {
-        this.symbols = symbols;
-    }
-
-    @Override
-    public Result<Type> visitNumberLiteral(NumberLiteral numberLiteral) {
-        return new Success<>(Type.NUMBER);
-    }
-
-    @Override
-    public Result<Type> visitStringLiteral(StringLiteral stringLiteral) {
-        return new Success<>(Type.STRING);
-    }
-
-    @Override
-    public Result<Type> visitBooleanLiteral(BooleanLiteral booleanLiteral) {
-        return new Success<>(Type.BOOLEAN);
-    }
-
-    // las dos lecturas externas valen string: lo que entra de afuera es texto
-    @Override
-    public Result<Type> visitReadInput(ReadInput readInput) {
-        return stringArgument(readInput.prompt(), "readInput");
-    }
-
-    @Override
-    public Result<Type> visitReadEnv(ReadEnv readEnv) {
-        return stringArgument(readEnv.name(), "readEnv");
-    }
-
-    private Result<Type> stringArgument(Expression argument, String function) {
-        return argument.accept(this).andThen(actual -> requireString(actual, argument, function));
-    }
-
-    private static Result<Type> requireString(Type actual, Expression argument, String function) {
-        if (actual != Type.STRING) {
-            return new Failure<>(
-                    "El argumento de " + function + " tiene que ser string", argument.range());
-        }
-        return new Success<>(Type.STRING);
-    }
-
-    @Override
-    public Result<Type> visitIdentifier(Identifier identifier) {
-        String name = identifier.name();
-        Optional<Symbol> symbol = symbols.read(name);
-        if (symbol.isEmpty()) {
-            return new Failure<>("Variable no declarada: " + name, identifier.range());
-        }
-        if (!symbols.isInitialized(name)) {
-            return new Failure<>("Variable usada antes de asignarse: " + name, identifier.range());
-        }
-        return new Success<>(symbol.get().type());
-    }
-
-    @Override
-    public Result<Type> visitUnaryExpression(UnaryExpression unaryExpression) {
-        return unaryExpression
-                .operand()
-                .accept(this)
-                .andThen(
-                        type ->
-                                type == Type.NUMBER
-                                        ? new Success<>(Type.NUMBER)
-                                        : new Failure<>(
-                                                "No se puede aplicar "
-                                                        + unaryExpression.operator().symbol()
-                                                        + " a "
-                                                        + type.writtenName(),
-                                                unaryExpression.range()));
-    }
-
-    @Override
-    public Result<Type> visitBinaryExpression(BinaryExpression binaryExpression) {
-        return binaryExpression
-                .left()
-                .accept(this)
-                .andThen(left -> typeRight(binaryExpression, left));
-    }
-
-    private Result<Type> typeRight(BinaryExpression expression, Type left) {
-        return expression
-                .right()
-                .accept(this)
-                .andThen(right -> combine(left, expression.operator(), right, expression));
-    }
-
-    // la concatenación es el único caso donde los dos lados pueden tener tipos distintos
-    private static Result<Type> combine(
-            Type left, Operator operator, Type right, BinaryExpression expression) {
-        boolean anyString = left == Type.STRING || right == Type.STRING;
-        if (operator == Operator.PLUS && anyString) {
-            return new Success<>(Type.STRING);
-        }
-        if (left == Type.BOOLEAN || right == Type.BOOLEAN) {
-            return arithmeticFailure(operator, left, right, expression.range());
-        }
-        if (operator == Operator.PLUS) {
-            return new Success<>(Type.NUMBER);
-        }
-        if (left != Type.NUMBER || right != Type.NUMBER) {
-            return arithmeticFailure(operator, left, right, expression.range());
-        }
-        return new Success<>(Type.NUMBER);
-    }
-
-    // mismo mensaje y mismo rango que usaba el intérprete para este error: la etapa
-    // cambia, pero lo que ve el usuario tiene que seguir siendo lo mismo
-    private static Result<Type> arithmeticFailure(
-            Operator operator, Type left, Type right, Range range) {
-        return new Failure<>(
-                "No se puede aplicar "
-                        + operator.symbol()
-                        + " entre "
-                        + left.writtenName()
-                        + " y "
-                        + right.writtenName(),
-                range);
-    }
-
-    @Override
-    protected Result<Type> notAnExpression(Range range) {
-        return new Failure<>("No es una expresión evaluable", range);
-    }
+    private ExpressionTyper() {}
 
     static Result<Type> typeOf(Expression expression, SymbolTable symbols) {
-        return expression.accept(new ExpressionTyper(symbols));
+        return new Checking(
+                        SemanticFactory.rules(), EnumSet.allOf(Type.class), "esta versión", symbols)
+                .typeOf(expression);
     }
 }

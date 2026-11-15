@@ -42,6 +42,13 @@ class ExpressionTest {
 
         assertEquals("binary:PLUS", describe(sum));
         assertEquals(
+                "unary:MINUS",
+                describe(
+                        new UnaryExpression(
+                                Operator.MINUS,
+                                new NumberLiteral(3.0, rangeAt(2, 2)),
+                                rangeAt(1, 2))));
+        assertEquals(
                 "readInput",
                 describe(new ReadInput(new StringLiteral("p", rangeAt(1, 1)), rangeAt(1, 1))));
         assertEquals(
@@ -75,5 +82,14 @@ class ExpressionTest {
         assertEquals(Operator.MINUS, Operator.valueOf("MINUS"));
         assertEquals(Operator.MULTIPLY, Operator.valueOf("MULTIPLY"));
         assertEquals(Operator.DIVIDE, Operator.valueOf("DIVIDE"));
+    }
+
+    // el símbolo es lo que se muestra en los mensajes de error ("No se puede aplicar - a ...")
+    @Test
+    void everyOperatorKeepsTheSymbolItIsWrittenWith() {
+        assertEquals("+", Operator.PLUS.symbol());
+        assertEquals("-", Operator.MINUS.symbol());
+        assertEquals("*", Operator.MULTIPLY.symbol());
+        assertEquals("/", Operator.DIVIDE.symbol());
     }
 }

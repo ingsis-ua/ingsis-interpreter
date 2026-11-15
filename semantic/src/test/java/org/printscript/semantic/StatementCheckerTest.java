@@ -28,13 +28,12 @@ class StatementCheckerTest {
     private static final String HOLA = "hola";
     private static final String STRING_EN_NUMBER =
             "No se puede asignar string a una variable number";
-    private static final String NOT_A_STATEMENT = "No es una sentencia";
 
     private final StatementChecker checker =
             new StatementChecker(Set.of(Type.NUMBER, Type.STRING, Type.BOOLEAN));
 
     private Result<Void> check(Statement statement) {
-        return statement.accept(checker);
+        return checker.check(statement);
     }
 
     private Failure<Void> failureOf(Statement statement) {
@@ -329,24 +328,4 @@ class StatementCheckerTest {
     }
 
     // --- una expresión suelta no es una sentencia ---
-
-    @Test
-    void anExpressionIsNotAStatement() {
-        // Statement es sealed, así que una expresión no se puede pasar como sentencia:
-        // estos métodos del visitor solo se alcanzan visitando la expresión directo
-        Range range = at(7, 3);
-
-        assertEquals(NOT_A_STATEMENT, visit(number(1, range)).message());
-        assertEquals(NOT_A_STATEMENT, visit(text(HOLA, range)).message());
-        assertEquals(NOT_A_STATEMENT, visit(name("x", range)).message());
-        assertEquals(NOT_A_STATEMENT, visit(Ast.bool(true, range)).message());
-        assertEquals(
-                NOT_A_STATEMENT,
-                visit(binary(number(1, range), Operator.PLUS, number(2, range))).message());
-        assertEquals(range, visit(number(1, range)).range());
-    }
-
-    private Failure<Void> visit(Expression expression) {
-        return assertInstanceOf(Failure.class, expression.accept(checker));
-    }
 }

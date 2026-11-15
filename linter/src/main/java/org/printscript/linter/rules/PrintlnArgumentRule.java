@@ -5,7 +5,7 @@ import org.printscript.ast.Expression;
 import org.printscript.ast.PrintlnStatement;
 import org.printscript.ast.Statement;
 import org.printscript.linter.Violation;
-import org.printscript.linter.visitors.PrintlnCollector;
+import org.printscript.linter.traversal.PrintlnCollector;
 
 // println recibe un literal o un identificador, no una expresión
 public record PrintlnArgumentRule() implements LintRule {
@@ -20,7 +20,7 @@ public record PrintlnArgumentRule() implements LintRule {
     // todos los incumplimientos
     @Override
     public List<Violation> check(Statement statement) {
-        return statement.accept(COLLECTOR).stream()
+        return COLLECTOR.collect(statement).stream()
                 .map(PrintlnStatement::expression)
                 .filter(argument -> !SimpleArgument.test(argument))
                 .map(PrintlnArgumentRule::violationFor)

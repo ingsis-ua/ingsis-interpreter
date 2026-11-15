@@ -7,7 +7,7 @@ import org.printscript.ast.Statement;
 import org.printscript.linter.Violation;
 import org.printscript.linter.rules.format.IdentifierFormatChecker;
 import org.printscript.linter.rules.format.IdentifierFormats;
-import org.printscript.linter.visitors.IdentifierCollector;
+import org.printscript.linter.traversal.IdentifierCollector;
 
 // que los nombres cumplan un formato
 public record IdentifierFormatRule(IdentifierFormatChecker checker) implements LintRule {
@@ -39,7 +39,7 @@ public record IdentifierFormatRule(IdentifierFormatChecker checker) implements L
 
     @Override
     public List<Violation> check(Statement statement) {
-        return statement.accept(COLLECTOR).stream()
+        return COLLECTOR.collect(statement).stream()
                 .filter(identifier -> !checker.isValid(identifier.name()))
                 .map(this::violationFor)
                 .toList();
