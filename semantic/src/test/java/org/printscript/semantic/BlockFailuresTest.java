@@ -21,6 +21,8 @@ import org.printscript.common.Range;
 
 class BlockFailuresTest {
 
+    private static final String NUMBER = "number";
+
     private final StatementChecker checker =
             new StatementChecker(Set.of(Type.NUMBER, Type.STRING, Type.BOOLEAN));
 
@@ -42,7 +44,7 @@ class BlockFailuresTest {
         Statement program =
                 conditional(
                         block(
-                                declare("a", "number", text("x", at(1, 29))),
+                                declare("a", NUMBER, text("x", at(1, 29))),
                                 declare("b", "string", number(5, at(1, 51))),
                                 println(name("zzz", at(1, 62)))),
                         null);
@@ -79,7 +81,7 @@ class BlockFailuresTest {
 
     @Test
     void aValidStatementHasNoFailures() {
-        assertEquals(List.of(), rangesOf(declare("ok", "number", number(1, Ast.ANY))));
+        assertEquals(List.of(), rangesOf(declare("ok", NUMBER, number(1, Ast.ANY))));
     }
 
     @Test
@@ -87,7 +89,7 @@ class BlockFailuresTest {
         checker.failuresOf(
                 conditional(
                         block(
-                                declare("interna", "number", number(1, Ast.ANY)),
+                                declare("interna", NUMBER, number(1, Ast.ANY)),
                                 println(name("uno", Ast.ANY)),
                                 println(name("dos", Ast.ANY))),
                         null));
@@ -105,7 +107,7 @@ class BlockFailuresTest {
                 conditional(
                         block(
                                 assign("x", Ast.ANY, number(1, Ast.ANY)),
-                                declare("y", "number", text("s", Ast.ANY))),
+                                declare("y", NUMBER, text("s", Ast.ANY))),
                         block(println(name("z", Ast.ANY))));
 
         assertEquals(
