@@ -9,10 +9,4 @@ import org.printscript.common.Range;
 // recursión la resuelve el parser.
 public record IfStatement(
         Expression condition, Block thenBlock, Optional<Statement> elseBranch, Range range)
-        implements Statement {
-
-    @Override
-    public <T> T accept(ASTVisitor<T> visitor) {
-        return visitor.visitIfStatement(this);
-    }
-}
+        implements Statement {}

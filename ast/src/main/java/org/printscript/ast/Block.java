@@ -9,9 +9,4 @@ public record Block(List<Statement> statements, Range range) implements Statemen
     public Block {
         statements = List.copyOf(statements);
     }
-
-    @Override
-    public <T> T accept(ASTVisitor<T> visitor) {
-        return visitor.visitBlock(this);
-    }
 }

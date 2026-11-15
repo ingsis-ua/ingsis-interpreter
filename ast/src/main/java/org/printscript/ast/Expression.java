@@ -14,6 +14,4 @@ public sealed interface Expression
                 ReadEnv {
 
     Range range();
-
-    <T> T accept(ASTVisitor<T> visitor);
 }
