@@ -8,8 +8,10 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.printscript.ast.AssignmentStatement;
 import org.printscript.ast.BinaryExpression;
+import org.printscript.ast.Block;
 import org.printscript.ast.Expression;
 import org.printscript.ast.Identifier;
+import org.printscript.ast.IfStatement;
 import org.printscript.ast.NumberLiteral;
 import org.printscript.ast.Operator;
 import org.printscript.ast.PrintlnStatement;
@@ -112,5 +114,27 @@ class IdentifierCollectorTest {
 
         assertEquals(nameRange, collected.get(0).range());
         assertEquals(valueRange, collected.get(1).range());
+    }
+
+    // preorden: la condición, después el then y después el else
+    @Test
+    void identifiersOfAnIfFollowConditionThenElse() {
+        Statement conditional =
+                new IfStatement(
+                        identifier("c"),
+                        new Block(
+                                List.of(
+                                        new VariableDeclaration(
+                                                identifier("t"),
+                                                new TypeName(NUMBER, ANY),
+                                                Optional.of(new NumberLiteral(1, ANY)),
+                                                ANY)),
+                                ANY),
+                        Optional.of(
+                                new Block(
+                                        List.of(new PrintlnStatement(identifier("e"), ANY)), ANY)),
+                        ANY);
+
+        assertEquals(List.of("c", "t", "e"), namesIn(conditional));
     }
 }

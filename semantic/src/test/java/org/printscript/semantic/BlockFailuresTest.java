@@ -1,6 +1,7 @@
 package org.printscript.semantic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.printscript.semantic.Ast.assign;
 import static org.printscript.semantic.Ast.at;
 import static org.printscript.semantic.Ast.declare;
 import static org.printscript.semantic.Ast.name;
@@ -94,6 +95,28 @@ class BlockFailuresTest {
         assertEquals(
                 List.of("Variable no declarada: interna"),
                 checker.failuresOf(println(name("interna", Ast.ANY))).stream()
+                        .map(Failure::message)
+                        .toList());
+    }
+
+    @Test
+    void failuresInThenAndElseComeInOrderWithTheirMessages() {
+        Statement program =
+                conditional(
+                        block(
+                                assign("x", Ast.ANY, number(1, Ast.ANY)),
+                                declare("y", "number", text("s", Ast.ANY))),
+                        block(println(name("z", Ast.ANY))));
+
+        assertEquals(
+                List.of(
+                        "Variable no declarada: x",
+                        "No se puede asignar string a una variable number",
+                        "Variable no declarada: z"),
+                checker.failuresOf(program).stream().map(Failure::message).toList());
+        assertEquals(
+                List.of("Variable no declarada: y"),
+                checker.failuresOf(println(name("y", Ast.ANY))).stream()
                         .map(Failure::message)
                         .toList());
     }
